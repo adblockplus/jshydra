@@ -1,0 +1,7 @@
+JSHydra static analysis tool
+
+jshydra_builtins.c and jshydra_funcs.c are copied from the dehydra sources with
+minor changes.
+
+The code requires a recent spidermonkey build, as it uses part of the internal
+API. Modify the /src/ paths in Makefile as appropriate to build.
