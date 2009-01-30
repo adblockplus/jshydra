@@ -124,7 +124,7 @@ JSBool Require(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
    as "this" when evaluating the script, which is effectively a namespace
    for the script. */
 static JSBool jshydra_loadScript (JSContext *cx, const char *filename, 
-                                  JSObject *namespace) {
+                                  JSObject *ns) {
   /* Read the file. There's a JS function for reading scripts, but Dehydra
      wants to search for the file in different dirs. */
   long size = 0;
@@ -141,7 +141,7 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
     return JS_FALSE;
   }
 
-  JSScript *script = JS_CompileScript(cx, namespace,
+  JSScript *script = JS_CompileScript(cx, ns,
                                       content, size, realname, 1);
   free(realname);
   if (script == NULL) {
@@ -152,7 +152,7 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
   JSObject *sobj = JS_NewScriptObject(cx, script);
   JS_AddNamedRoot(cx, &sobj, filename);
   jsval rval;
-  JSBool rv = JS_ExecuteScript(cx, namespace, script, &rval);
+  JSBool rv = JS_ExecuteScript(cx, ns, script, &rval);
   JS_RemoveRoot(cx, &sobj);
   if (!rv) {
     xassert(JS_IsExceptionPending(cx));
@@ -165,17 +165,17 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
 JSBool Include(JSContext *cx, JSObject *obj, uintN argc,
                jsval *argv, jsval *rval) {
   char *filename;
-  JSObject *namespace = globalObj;
-  if (!JS_ConvertArguments(cx, argc, argv, "s/o", &filename, &namespace))
+  JSObject *ns = globalObj;
+  if (!JS_ConvertArguments(cx, argc, argv, "s/o", &filename, &ns))
     return JS_FALSE;
  
-  *rval = OBJECT_TO_JSVAL (namespace);
+  *rval = OBJECT_TO_JSVAL (ns);
   JSObject *includedArray = NULL;
   jsval val;
-  JS_GetProperty(cx, namespace, "_includedArray", &val);
+  JS_GetProperty(cx, ns, "_includedArray", &val);
   if (!JSVAL_IS_OBJECT (val)) {
     includedArray = JS_NewArrayObject (cx, 0, NULL);
-    jshydra_defineProperty (cx, namespace, "_includedArray",
+    jshydra_defineProperty (cx, ns, "_includedArray",
                             OBJECT_TO_JSVAL (includedArray));
   } else {
     includedArray = JSVAL_TO_OBJECT (val);
@@ -186,7 +186,7 @@ JSBool Include(JSContext *cx, JSObject *obj, uintN argc,
   }
 
   JS_CallFunctionName (cx, includedArray, "push", 1, argv, rval);
-  return jshydra_loadScript (cx, filename, namespace);
+  return jshydra_loadScript (cx, filename, ns);
 }
 
 JSBool Diagnostic(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
@@ -321,9 +321,9 @@ FILE *findFile(const char *filename, const char *dir, char **realname) {
     return f;
   }
   if (dir && dir[0] && filename[0] && filename[0] != '/') {
-    char *buf = malloc(strlen(dir) + strlen(filename) + 2);
+    char *buf = static_cast<char *>(malloc(strlen(dir) + strlen(filename) + 2));
     /* Doing a little extra work here to get rid of unneeded '/'. */
-    char *sep = dir[strlen(dir)-1] == '/' ? "" : "/";
+    const char *sep = dir[strlen(dir)-1] == '/' ? "" : "/";
     sprintf(buf, "%s%s%s", dir, sep, filename);
     f = fopen(buf, "r");
     if (f) {
@@ -341,7 +341,7 @@ char *readEntireFile(FILE *f, long *size) {
   if (fseek(f, 0, SEEK_END)) return NULL;
   *size = ftell(f);
   if (fseek(f, 0, SEEK_SET)) return NULL;
-  char *buf = malloc(*size + 1);
+  char *buf = static_cast<char *>(malloc(*size + 1));
   xassert(*size == fread(buf, 1, *size, f));
   buf[*size] = 0;
   fclose(f);

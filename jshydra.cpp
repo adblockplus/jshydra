@@ -1,23 +1,9 @@
-typedef int bool;
-
 #include "jsapi.h"
 #include "jsparse.h"
 #include "jscntxt.h"
 #include <stdio.h>
 
 #include "jshydra_bridge.h"
-
-/*static JSRuntime *rt;
-static JSContext *cx;
-static JSObject *globalObject;*/
-
-static char *opcodes[] = {
-#define OPDEF(op, val, name, image, len, use, def, prec, format) \
-	#op,
-#include "jsopcode.tbl"
-#undef OPDEF
-	NULL
-};
 
 void setIntProperty(JSObject *obj, const char *name, int value) {
 	jshydra_defineProperty(cx, obj, name, INT_TO_JSVAL(value));
@@ -39,7 +25,7 @@ typedef enum TokenValue {
 } TokenValue;
 
 TokenValue tokens[] = {
-    ERROR, /*TOK_EOF*/
+    NULLARY, /*TOK_EOF*/
     ERROR, /*TOK_EOL*/
     UNARY, /*TOK_SEMI*/
     LIST, /*TOK_COMMA*/
@@ -84,7 +70,7 @@ TokenValue tokens[] = {
     BINARY, /*TOK_FOR*/
     NAME, /*TOK_BREAK*/
     NAME, /*TOK_CONTINUE*/
-    ERROR, /*TOK_IN*/
+    BINARY, /*TOK_IN*/
     LIST, /*TOK_VAR*/
     BINARY, /*TOK_WITH*/
     UNARY, /*TOK_RETURN*/
@@ -176,7 +162,7 @@ JSObject *makeNode(JSParseNode *node) {
 		break;
 	}
 	case NAME: {
-		JS_DefineProperty(cx, object, "atom", ATOM_KEY(node->pn_atom), NULL, NULL, JSPROP_READONLY);
+		JS_DefineProperty(cx, object, "atom", ATOM_KEY(node->pn_atom), NULL, NULL, JSPROP_READONLY | JSPROP_ENUMERATE);
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
 		setArrayElement(array, 0, makeNode(node->pn_expr));
 		setObjectProperty(object, "kids", array);
@@ -192,7 +178,7 @@ JSObject *makeNode(JSParseNode *node) {
 		break;
 	case ERROR:
 	default:
-		fprintf(stderr, "Unexpected type: %d\n", node->pn_type);
+		fprintf(stderr, "Unexpected type: %d (arity %d)\n", node->pn_type, node->pn_arity);
 		break;
 	}
 	return object;
