@@ -15,10 +15,10 @@ OBJS := $(addprefix /src/build/trunk/browser/js/src/, $(OBJS))
 jshydra: jshydra.o jshydra_funcs.o jshydra_bridge.o
 	g++ -o jshydra jshydra.o jshydra_funcs.o jshydra_bridge.o $(OBJS) $(LINK)
 
-jshydra.o: jshydra.c
-	gcc -o jshydra.o -g $(INCLUDE) -c jshydra.c
+jshydra.o: jshydra.cpp
+	g++ -o jshydra.o -g $(INCLUDE) -c jshydra.cpp
 
-jshydra_funcs.o: jshydra_funcs.c
-	gcc -o jshydra_funcs.o -g $(INCLUDE) -c jshydra_funcs.c
-jshydra_bridge.o: jshydra_bridge.c
-	gcc -o jshydra_bridge.o -g $(INCLUDE) -c jshydra_bridge.c
+jshydra_funcs.o: jshydra_funcs.cpp
+	g++ -o jshydra_funcs.o -g $(INCLUDE) -c jshydra_funcs.cpp
+jshydra_bridge.o: jshydra_bridge.cpp
+	g++ -o jshydra_bridge.o -g $(INCLUDE) -c jshydra_bridge.cpp

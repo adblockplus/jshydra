@@ -3,9 +3,18 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "jshydra_bridge.h"
 #include "jshydra_funcs.h"
+
+static const char *opcodes[] = {
+#define OPDEF(op, val, name, image, len, use, def, prec, format) \
+	#op,
+#include "jsopcode.tbl"
+#undef OPDEF
+	NULL
+};
 
 JSRuntime *rt;
 JSContext *cx;
@@ -71,7 +80,7 @@ void jshydra_init(const char *file) {
   char *filename_copy = strdup(file);
   char *dir = my_dirname(filename_copy);
   jshydra_appendToPath(cx, dir);
-  char *libdir = malloc(strlen(dir) + strlen("libs") + 2);
+  char *libdir = static_cast<char *>(malloc(strlen(dir) + strlen("libs") + 2));
   sprintf(libdir, "%s/%s", dir, "libs");
   jshydra_appendToPath(cx, libdir);
   free(libdir);
@@ -83,6 +92,13 @@ void jshydra_init(const char *file) {
   //}
   xassert (JS_InitClass(cx, globalObj, NULL
                         ,&js_node_class , NULL, 0, NULL, NULL, NULL, NULL));
+
+  /* Define the token properties. */
+  const char **name = opcodes;
+  jsint index = 0;
+  while (*name) {
+	  jshydra_defineProperty(cx, globalObj, *name++, INT_TO_JSVAL(index++));
+  }
 }
 
 /*int dehydra_startup (Dehydra *this) {
@@ -150,9 +166,9 @@ FILE *jshydra_searchPath (JSContext *cx, const char *filename, char **realname)
       if (!dir_str) continue;
       char *dir = JS_GetStringBytes(dir_str);
 
-      char *buf = malloc(strlen(dir) + strlen(filename) + 2);
+      char *buf = static_cast<char *>(malloc(strlen(dir) + strlen(filename) + 2));
       /* Doing a little extra work here to get rid of unneeded '/'. */
-      char *sep = dir[strlen(dir)-1] == '/' ? "" : "/";
+      const char *sep = dir[strlen(dir)-1] == '/' ? "" : "/";
       sprintf(buf, "%s%s%s", dir, sep, filename);
       FILE *f = fopen(buf, "r");
       if (f) {
