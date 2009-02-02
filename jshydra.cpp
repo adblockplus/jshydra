@@ -74,7 +74,7 @@ TokenValue tokens[] = {
     LIST, /*TOK_VAR*/
     BINARY, /*TOK_WITH*/
     UNARY, /*TOK_RETURN*/
-    ERROR, /*TOK_NEW*/
+    LIST, /*TOK_NEW*/
     ERROR, /*TOK_DELETE*/
     UNARY, /*TOK_DEFSHARP*/
     NULLARY, /*TOK_USESHARP (use pn_num)*/
@@ -106,10 +106,10 @@ TokenValue tokens[] = {
     LIST, /*TOK_ARRAYCOMP*/
     UNARY, /*TOK_ARRAYPUSH*/
     NAME, /*TOK_LEXICALSCOPE*/
-    ERROR, /*TOK_LET*/
+    LIST, /*TOK_LET*/
     ERROR, /*TOK_SEQ*/
-    ERROR, /*TOK_FORHEAD*/
-    //TOK_RESERVED,
+    TERNARY, /*TOK_FORHEAD*/
+    LIST, /*TOK_RESERVED [I don't understand this...] */
     //TOK_LIMIT
 	ERROR
 };
@@ -125,6 +125,10 @@ JSObject *makeNode(JSParseNode *node) {
 	switch (tokens[node->pn_type]) {
 	case FUNCTION: {
 		setIntProperty(object, "flags", node->pn_flags);
+		JSFunction *func = (JSFunction *) node->pn_funpob->object;
+		if (func->atom)
+			jshydra_defineProperty(cx, object, "name", ATOM_KEY(func->atom));
+
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
 		setArrayElement(array, 0, makeNode(node->pn_body));
 		setObjectProperty(object, "kids", array);
