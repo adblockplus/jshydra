@@ -27,4 +27,6 @@ void jshydra_defineProperty(JSContext *cx, JSObject *obj,
 jsuint jshydra_getArrayLength(JSContext *cx, JSObject *array);
 jsval jshydra_getToplevelFunction(JSContext *cx, char const *name);
 
+void jshydra_rootObject(JSContext *cx, JSObject *obj);
+
 #endif
