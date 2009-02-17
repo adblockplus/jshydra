@@ -117,6 +117,8 @@ TokenValue tokens[] = {
 JSObject *makeNode(JSParseNode *node) {
 	if (!node)
 		return NULL;
+	if (!JS_EnterLocalRootScope(cx))
+		return NULL;
 	JSObject *object = JS_NewObject(cx, &js_node_class, NULL, NULL);
 	setIntProperty(object, "line", node->pn_pos.begin.lineno);
 	setIntProperty(object, "column", node->pn_pos.begin.index);
@@ -176,7 +178,7 @@ JSObject *makeNode(JSParseNode *node) {
 	//case APAIR:
 	//case OBJLITERAL:
 	case DOUBLELITERAL:
-		jshydra_defineProperty(cx, object, "value", DOUBLE_TO_JSVAL(node->pn_dval));
+		jshydra_defineProperty(cx, object, "value", DOUBLE_TO_JSVAL(&node->pn_dval));
 		break;
 	case NULLARY:
 		break;
@@ -185,6 +187,7 @@ JSObject *makeNode(JSParseNode *node) {
 		fprintf(stderr, "Unexpected type: %d (arity %d)\n", node->pn_type, node->pn_arity);
 		break;
 	}
+	JS_LeaveLocalRootScope(cx);
 	return object;
 }
 
@@ -197,6 +200,7 @@ void parseFile(FILE *file, char *filename) {
 	jsval func = jshydra_getToplevelFunction(cx, "process_js");
 	if (JS_TypeOfValue(cx, func) != JSTYPE_FUNCTION) {
 		fprintf(stderr, "No function process_js!\n");
+  		JS_LeaveLocalRootScope(cx);
 		return;
 	}
 	jsval rval, argv[1];

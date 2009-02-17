@@ -21,4 +21,4 @@ jshydra.o: jshydra.cpp
 jshydra_funcs.o: jshydra_funcs.cpp
 	g++ -o jshydra_funcs.o -g $(INCLUDE) -c jshydra_funcs.cpp
 jshydra_bridge.o: jshydra_bridge.cpp
-	g++ -o jshydra_bridge.o -g $(INCLUDE) -c jshydra_bridge.cpp
+	g++ -o jshydra_bridge.o -g $(INCLUDE) -c jshydra_bridge.cpp -DDEBUG

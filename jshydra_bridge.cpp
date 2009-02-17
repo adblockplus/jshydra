@@ -1,5 +1,5 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-#include <jsapi.h>
+#include "jsapi.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +19,8 @@ static const char *opcodes[] = {
 JSRuntime *rt;
 JSContext *cx;
 JSObject *globalObj;
+
+JSObject *rootArray;
 
 static char *my_dirname (char *path);
 
@@ -46,6 +48,7 @@ void jshydra_init(const char *file) {
   rt = JS_NewRuntime (0x9000000L);
   cx = JS_NewContext (rt, 8192);
   JS_BeginRequest(cx);
+  //JS_SetGCZeal(cx, 2);
 
   //JS_SetContextPrivate (this->cx, this);
   
@@ -99,6 +102,10 @@ void jshydra_init(const char *file) {
   while (*name) {
 	  jshydra_defineProperty(cx, globalObj, *name++, INT_TO_JSVAL(index++));
   }
+
+  rootArray = JS_NewArrayObject(cx, 0, NULL);
+  JS_AddRoot(cx, &rootArray);
+  jshydra_rootObject(cx, globalObj);
 }
 
 /*int dehydra_startup (Dehydra *this) {
@@ -108,9 +115,11 @@ void jshydra_init(const char *file) {
 int jshydra_includeScript (JSContext *cx, const char *script) {
   jsval strval = STRING_TO_JSVAL(JS_NewStringCopyZ(cx, script));
   //int key = dehydra_rootObject (this, strval);
+  if (!JS_EnterLocalRootScope(cx))
+	  return -1;
   jsval rval;
   int ret = !Include (cx, globalObj, 1, &strval, &rval);
-  //dehydra_unrootObject (this, key);
+  JS_LeaveLocalRootScope(cx);
   return ret;
 }
 
@@ -246,4 +255,10 @@ jsval jshydra_getToplevelFunction(JSContext *cx, char const *name) {
   return (JS_GetProperty(cx, globalObj, name, &val)
           && val != JSVAL_VOID
           && JS_TypeOfValue(cx, val) == JSTYPE_FUNCTION) ? val : JSVAL_VOID;
+}
+
+void jshydra_rootObject(JSContext *cx, JSObject *obj) {
+  jsval rval, argv[1];
+  argv[0] = OBJECT_TO_JSVAL(obj);
+  JS_CallFunctionName(cx, rootArray, "push", 1, argv, &rval);
 }
