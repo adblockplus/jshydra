@@ -228,4 +228,5 @@ int main(int argc, char **argv) {
 		parseFile(input, argv[0]);
 	} while (argc > 1);
 
+	return 0;
 }

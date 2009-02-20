@@ -22,3 +22,19 @@ jshydra_funcs.o: jshydra_funcs.cpp
 	g++ -o jshydra_funcs.o -g $(INCLUDE) -c jshydra_funcs.cpp
 jshydra_bridge.o: jshydra_bridge.cpp
 	g++ -o jshydra_bridge.o -g $(INCLUDE) -c jshydra_bridge.cpp -DDEBUG
+
+TESTS := $(notdir $(wildcard autotest/test_*.js))
+check: jshydra
+	@cd autotest && for f in $(TESTS); do \
+		eval $$(cat $$f | sed -e '/^\/\/ [A-Za-z]*:/!q' -e 's+^// \([A-Za-z]*\): \(.*\)$$+export \1="\2"+'); \
+		echo -n "$$Name... "; \
+		../jshydra $$f $$Arguments &> .$$f.out; \
+		if diff -q ".$$f.out" "$$f.expected" &>/dev/null; then \
+			echo ' passed!'; \
+		else \
+		echo ' failed! Log:'; \
+			cat .$$f.out; \
+		fi \
+	done && rm .*.out
+
+.PHONY: check
