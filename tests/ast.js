@@ -14,6 +14,7 @@ function process_js(ast) {
 	_print("Global constants:");
 	for each (let v in toplevel.constants) {
 		_print("\t" + v.name + " at " + v.loc.line + ":" + v.loc.column);
+		_print(uneval(v));
 	}
 	_print("Global functions:");
 	for each (let v in toplevel.functions) {
