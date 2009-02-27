@@ -139,8 +139,9 @@ JSObject *makeNode(JSParseNode *node) {
 	case LIST: {
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
 		int i = 0;
-		for (node = node->pn_head; node; node = node->pn_next) {
-			setArrayElement(array, i++, makeNode(node));
+		JSParseNode *element = node->pn_head;
+		for (; element; element = element->pn_next) {
+			setArrayElement(array, i++, makeNode(element));
 		}
 		setObjectProperty(object, "kids", array);
 		break;
@@ -187,7 +188,7 @@ JSObject *makeNode(JSParseNode *node) {
 		fprintf(stderr, "Unexpected type: %d (arity %d)\n", node->pn_type, node->pn_arity);
 		break;
 	}
-	JS_LeaveLocalRootScope(cx);
+	JS_LeaveLocalRootScopeWithResult(cx, OBJECT_TO_JSVAL(object));
 	return object;
 }
 
@@ -197,6 +198,8 @@ void parseFile(FILE *file, char *filename) {
 		return;
 	JSParseNode *root = js_ParseScript(cx, globalObj, &pc);
 	JSObject *ast = makeNode(root);
+	jshydra_rootObject(cx, ast);
+	JS_GC(cx);
 	jsval func = jshydra_getToplevelFunction(cx, "process_js");
 	if (JS_TypeOfValue(cx, func) != JSTYPE_FUNCTION) {
 		fprintf(stderr, "No function process_js!\n");

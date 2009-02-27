@@ -1,4 +1,14 @@
 /**
+ * A brief description of some nodes.
+ *
+ * Scope block information:
+ *  variables (Variable[]): a list of variables declared in the block
+ *  functions (Function[]): a list of functions declared in the block
+ *  constants (Variable[]): a list of constants declared in the block
+ *  code (Statement[]): a list of statements in the block
+ */
+
+/**
  * Takes the node rooted at the AST and decomposes it into readable sections.
  */
 function clean_ast(ast) {
