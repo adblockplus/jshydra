@@ -30,7 +30,7 @@ TokenValue tokens[] = {
     UNARY, /*TOK_SEMI*/
     LIST, /*TOK_COMMA*/
     BINARY, /*TOK_ASSIGN*/
-    BINARY, /*TOK_HOOK*/
+    TERNARY, /*TOK_HOOK*/
 	NAME, /*TOK_COLON*/
     BINARY, /*TOK_OR*/
     BINARY, /*TOK_AND*/
@@ -105,7 +105,7 @@ TokenValue tokens[] = {
     ERROR, /*TOK_YIELD*/
     LIST, /*TOK_ARRAYCOMP*/
     UNARY, /*TOK_ARRAYPUSH*/
-    NAME, /*TOK_LEXICALSCOPE*/
+    LEXICAL, /*TOK_LEXICALSCOPE*/
     LIST, /*TOK_LET*/
     ERROR, /*TOK_SEQ*/
     TERNARY, /*TOK_FORHEAD*/
@@ -113,6 +113,8 @@ TokenValue tokens[] = {
     //TOK_LIMIT
 	ERROR
 };
+
+TokenValue arityFix[] = {FUNCTION, LIST, TERNARY, BINARY, UNARY, NAME, NULLARY};
 
 JSObject *makeNode(JSParseNode *node) {
 	if (!node)
@@ -124,7 +126,13 @@ JSObject *makeNode(JSParseNode *node) {
 	setIntProperty(object, "column", node->pn_pos.begin.index);
 	setIntProperty(object, "op", node->pn_op);
 	setIntProperty(object, "type", node->pn_type);
-	switch (tokens[node->pn_type]) {
+
+	// Some of our nodes actually need the arity to work right.
+	TokenValue value = tokens[node->pn_type];
+	if (node->pn_type == TOK_COLON)
+		value = arityFix[node->pn_arity];
+
+	switch (value) {
 	case FUNCTION: {
 		setIntProperty(object, "flags", node->pn_flags);
 		JSFunction *func = (JSFunction *) node->pn_funpob->object;
@@ -175,12 +183,23 @@ JSObject *makeNode(JSParseNode *node) {
 		setObjectProperty(object, "kids", array);
 		break;
 	}
-	//case LEXICAL:
+	case LEXICAL: {
+		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
+		setArrayElement(array, 0, makeNode(node->pn_expr));
+		setObjectProperty(object, "kids", array);
+		break;
+	}
 	//case APAIR:
 	//case OBJLITERAL:
-	case DOUBLELITERAL:
-		jshydra_defineProperty(cx, object, "value", DOUBLE_TO_JSVAL(&node->pn_dval));
+	case DOUBLELITERAL: {
+		jsval dval;
+		if (!JS_NewDoubleValue(cx, node->pn_dval, &dval)) {
+			fprintf(stderr, "I think I ran out of memory...\n");
+			return NULL;
+		}
+		jshydra_defineProperty(cx, object, "value", dval);
 		break;
+	}
 	case NULLARY:
 		break;
 	case ERROR:
@@ -199,11 +218,9 @@ void parseFile(FILE *file, char *filename) {
 	JSParseNode *root = js_ParseScript(cx, globalObj, &pc);
 	JSObject *ast = makeNode(root);
 	jshydra_rootObject(cx, ast);
-	JS_GC(cx);
 	jsval func = jshydra_getToplevelFunction(cx, "process_js");
 	if (JS_TypeOfValue(cx, func) != JSTYPE_FUNCTION) {
 		fprintf(stderr, "No function process_js!\n");
-  		JS_LeaveLocalRootScope(cx);
 		return;
 	}
 	jsval rval, argv[1];
