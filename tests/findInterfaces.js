@@ -2,6 +2,7 @@
 // via Components.interfaces.
 
 include("../scripts/cleanast.js");
+include("../scripts/dumpast.js");
 
 function visit(root_ast, func) {
 	function v_r(ast, func) {
@@ -31,11 +32,14 @@ function visit(root_ast, func) {
 		}
 		return sanitized_ast;
 	}
-	
+
 	v_r(sanitize(root_ast), func);
 }
 
-function process_js(ast) {
+let filename;
+
+function process_js(ast, f) {
+	filename = f;
 	let global = clean_ast(ast);
 	for each (let c in global.constants) {
 		mark_globals(c);
@@ -68,5 +72,5 @@ function find_interfaces(ast) {
 }
 
 function loc2str(ast) {
-	return ast.line + ":" + ast.column;
+	return filename + ":" + ast.line + ":" + ast.column;
 }

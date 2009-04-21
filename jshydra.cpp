@@ -183,8 +183,10 @@ JSObject *makeNode(JSParseNode *node) {
 	}
 	case NAME: {
 		JS_DefineProperty(cx, object, "atom", ATOM_KEY(node->pn_atom), NULL, NULL, JSPROP_READONLY | JSPROP_ENUMERATE);
+		setIntProperty(object, "flags", node->pn_dflags);
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
-		setArrayElement(array, 0, makeNode(node->pn_expr));
+		if (!node->pn_used)
+			setArrayElement(array, 0, makeNode(node->pn_expr));
 		setObjectProperty(object, "kids", array);
 		break;
 	}
@@ -234,9 +236,11 @@ void parseFile(FILE *file, char *filename) {
 		fprintf(stderr, "No function process_js!\n");
 		return;
 	}
-	jsval rval, argv[1];
+	jsval rval, argv[2];
 	argv[0] = OBJECT_TO_JSVAL(ast);
-	JS_CallFunctionValue(cx, globalObj, func, 1, argv, &rval);
+	JSString *newfname = JS_NewStringCopyZ(cx, filename);
+	argv[1] = STRING_TO_JSVAL(newfname);
+	JS_CallFunctionValue(cx, globalObj, func, 2, argv, &rval);
 }
 
 int main(int argc, char **argv) {
