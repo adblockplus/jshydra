@@ -49,7 +49,11 @@ function make_variables(var_root) {
 function make_function(func_root) {
 	assert(func_root.type == 34); // TOK_FUNCTION
 	let stmts = func_root.kids[0];
-	assert(stmts.type == 25); // TOK_LC
+	if (stmts.type == 85) // TOK_UPVARS
+		stmts = stmts.kids[0];
+	if (stmts.type == 84) // TOK_ARGSBODY
+		stmts = stmts.kids[stmts.kids.length - 1];
+	assert(stmts.type == 25);
 	return { name: func_root.name, body: stmts, loc: get_location(func_root)};
 }
 

@@ -1,4 +1,7 @@
+#include <string.h> // Needed for jsparse.h
 #include "jsapi.h"
+#include "jsbit.h" // jsparse.h
+#include "jsscript.h" // jsparse.h
 #include "jsparse.h"
 #include "jscntxt.h"
 #include <stdio.h>
@@ -21,7 +24,7 @@ void setArrayElement(JSObject *array, jsint index, JSObject *value) {
 }
 
 typedef enum TokenValue {
-	FUNCTION, LIST, TERNARY, BINARY, UNARY, NAME, LEXICAL, APAIR, OBJLITERAL, DOUBLELITERAL, NULLARY, ERROR
+	FUNCTION, LIST, TERNARY, BINARY, UNARY, NAME, LEXICAL, APAIR, OBJLITERAL, DOUBLELITERAL, NULLARY, NAMESET, ERROR
 } TokenValue;
 
 TokenValue tokens[] = {
@@ -109,12 +112,14 @@ TokenValue tokens[] = {
     LIST, /*TOK_LET*/
     ERROR, /*TOK_SEQ*/
     TERNARY, /*TOK_FORHEAD*/
+	LIST, /*TOK_ARGSBODY */
+	NAMESET, /*TOK_UPVARS */
     LIST, /*TOK_RESERVED [I don't understand this...] */
     //TOK_LIMIT
 	ERROR
 };
 
-TokenValue arityFix[] = {FUNCTION, LIST, TERNARY, BINARY, UNARY, NAME, NULLARY};
+TokenValue arityFix[] = {NULLARY, UNARY, BINARY, TERNARY, FUNCTION, LIST, NAME};
 
 JSObject *makeNode(JSParseNode *node) {
 	if (!node)
@@ -134,8 +139,8 @@ JSObject *makeNode(JSParseNode *node) {
 
 	switch (value) {
 	case FUNCTION: {
-		setIntProperty(object, "flags", node->pn_flags);
-		JSFunction *func = (JSFunction *) node->pn_funpob->object;
+		setIntProperty(object, "flags", node->pn_dflags);
+		JSFunction *func = (JSFunction *) node->pn_funbox->object;
 		if (func->atom)
 			jshydra_defineProperty(cx, object, "name", ATOM_KEY(func->atom));
 
@@ -183,6 +188,12 @@ JSObject *makeNode(JSParseNode *node) {
 		setObjectProperty(object, "kids", array);
 		break;
 	}
+	case NAMESET: {
+		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
+		setArrayElement(array, 0, makeNode(node->pn_tree));
+		setObjectProperty(object, "kids", array);
+		break;
+	}
 	case LEXICAL: {
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
 		setArrayElement(array, 0, makeNode(node->pn_expr));
@@ -212,10 +223,10 @@ JSObject *makeNode(JSParseNode *node) {
 }
 
 void parseFile(FILE *file, char *filename) {
-	JSParseContext pc;
-	if (!js_InitParseContext(cx, &pc, NULL, NULL, NULL, 0, file, filename, 1))
+	JSCompiler compiler(cx, NULL, NULL);
+	if (!compiler.init(NULL, 0, file, filename, 1))
 		return;
-	JSParseNode *root = js_ParseScript(cx, globalObj, &pc);
+	JSParseNode *root = compiler.parse(globalObj);
 	JSObject *ast = makeNode(root);
 	jshydra_rootObject(cx, ast);
 	jsval func = jshydra_getToplevelFunction(cx, "process_js");

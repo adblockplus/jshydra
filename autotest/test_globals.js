@@ -19,6 +19,5 @@ function process_js(ast) {
 	_print("Global functions:");
 	for each (let v in toplevel.functions) {
 		_print("\t" + v.name + " at " + v.loc.line + ":" + v.loc.column);
-		_print(v.body.kids[0].column);
 	}
 }
