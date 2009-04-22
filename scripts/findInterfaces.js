@@ -1,8 +1,8 @@
 // This is a simple script to find all interfaces that a JS code uses, at least
 // via Components.interfaces.
 
-include("../scripts/cleanast.js");
-include("../scripts/dumpast.js");
+include("../utils/cleanast.js");
+include("../utils/dumpast.js");
 
 function visit(root_ast, func) {
 	function v_r(ast, func) {
