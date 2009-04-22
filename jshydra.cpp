@@ -60,7 +60,7 @@ TokenValue tokens[] = {
     NAME, /*TOK_NAME*/
     DOUBLELITERAL, /*TOK_NUMBER*/
     NAME, /*TOK_STRING*/
-    NAME, /*TOK_REGEXP*/
+    OBJLITERAL, /*TOK_REGEXP*/
     NULLARY, /*TOK_PRIMARY*/
     FUNCTION, /*TOK_FUNCTION*/
     TERNARY, /*TOK_IF*/
@@ -203,7 +203,12 @@ JSObject *makeNode(JSParseNode *node) {
 		break;
 	}
 	//case APAIR:
-	//case OBJLITERAL:
+	case OBJLITERAL: {
+    setObjectProperty(object, "value", node->pn_objbox->object);
+		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
+		setArrayElement(array, 0, makeNode(node->pn_expr));
+		setObjectProperty(object, "kids", array);
+  }
 	case DOUBLELITERAL: {
 		jsval dval;
 		if (!JS_NewDoubleValue(cx, node->pn_dval, &dval)) {
