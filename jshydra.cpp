@@ -78,14 +78,14 @@ TokenValue tokens[] = {
     BINARY, /*TOK_WITH*/
     UNARY, /*TOK_RETURN*/
     LIST, /*TOK_NEW*/
-    ERROR, /*TOK_DELETE*/
+    UNARY, /*TOK_DELETE*/
     UNARY, /*TOK_DEFSHARP*/
     NULLARY, /*TOK_USESHARP (use pn_num)*/
     TERNARY, /*TOK_TRY*/
     TERNARY, /*TOK_CATCH*/
     ERROR, /*TOK_FINALLY*/
     UNARY, /*TOK_THROW*/
-    ERROR, /*TOK_INSTANCEOF*/
+    BINARY, /*TOK_INSTANCEOF*/
     ERROR, /*TOK_DEBUGGER*/
     ERROR, /*TOK_XMLSTAGO*/
     ERROR, /*TOK_XMLETAGO*/
@@ -134,7 +134,8 @@ JSObject *makeNode(JSParseNode *node) {
 
 	// Some of our nodes actually need the arity to work right.
 	TokenValue value = tokens[node->pn_type];
-	if (node->pn_type == TOK_COLON)
+	if (node->pn_type == TOK_COLON ||
+      (node->pn_type >= TOK_OR && node->pn_type <= TOK_DIVOP))
 		value = arityFix[node->pn_arity];
 
 	switch (value) {

@@ -1,7 +1,8 @@
 // This is a simple test to test global magic
 
-include("../scripts/cleanast.js");
-include("../scripts/dumpast.js");
+include("../utils/cleanast.js");
+include("../utils/dumpast.js");
+include("../utils/jstypes.js");
 
 function process_js(ast, f) {
   function loc(l) {
@@ -18,7 +19,11 @@ function process_js(ast, f) {
   }
   _print("Global objects:");
   for each (let v in toplevel.objects) {
+    divine_inheritance(v, toplevel.constants);
     _print("\t" + v.name + " at " + f + ":" + v.loc.line + ":" + v.loc.column);
+    if (v.inherits) {
+      _print("\tInherits from " + v.inherits.join(", "));
+    }
     _print("\tFunctions:");
     for (let name in v.functions) {
       _print("\t\t" + name + " at " + loc(v.functions[name].loc));
@@ -38,7 +43,11 @@ function process_js(ast, f) {
   }
   _print("Global classes:");
   for each (let v in toplevel.classes) {
+    divine_inheritance(v, toplevel.constants);
     _print("\t" + v.name + " at " + f + ":" + v.loc.line + ":" + v.loc.column);
+    if (v.inherits) {
+      _print("\tInherits from " + v.inherits.join(", "));
+    }
     _print("\tFunctions:");
     for (let name in v.functions) {
       _print("\t\t" + name + " at " + loc(v.functions[name].loc));

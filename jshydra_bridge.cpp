@@ -48,7 +48,7 @@ void jshydra_init(const char *file) {
   rt = JS_NewRuntime (0x9000000L);
   cx = JS_NewContext (rt, 8192);
   JS_BeginRequest(cx);
-  JS_SetGCZeal(cx, 2);
+  //JS_SetGCZeal(cx, 2);
 
   //JS_SetContextPrivate (this->cx, this);
   

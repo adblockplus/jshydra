@@ -5,6 +5,8 @@
  *  variables (Variable[]): a list of variables declared in the block
  *  functions (Function[]): a list of functions declared in the block
  *  constants (Variable[]): a list of constants declared in the block
+ *  classes (Class[]): a list of classes declared in the block
+ *  objects (Class[]): a list of objects declared in the block
  *  code (Statement[]): a list of statements in the block
  */
 
@@ -22,6 +24,7 @@ function clean_ast(ast) {
 		functions: [],
 		code: []
 	};
+
 	for each (let statement in ast.kids) {
     if (statement.op == JSOP_DEFVAR) {
       let ret = make_variables(statement);
@@ -41,6 +44,45 @@ function clean_ast(ast) {
 		}
 	}
 	return info;
+}
+
+/**
+ * Visits the AST using the given function as a parameter.
+ * The parameter will take in a single argument, the AST node.
+ */
+function visit(root_ast, func, to_expand) {
+	function v_r(ast, func) {
+		if (ast == null)
+			return;
+		func(ast);
+		for each (let child in ast.kids)
+			v_r(child, func);
+	}
+
+	function sanitize(ast) {
+		if (ast == null)
+			return null;
+		if (ast.op == JSOP_NAME && ast.atom in to_expand) {
+			ast = sanitize(to_expand[ast.atom]);
+			ast.expanded = true;
+		}
+		let sanitized_ast = { kids: [] };
+		for (let key in ast) {
+			if (key == 'kids') {
+				for each (let kid in ast.kids) {
+					sanitized_ast.kids.push(sanitize(kid));
+				}
+			} else {
+				sanitized_ast[key] = ast[key];
+			}
+		}
+		return sanitized_ast;
+	}
+
+  if (to_expand)
+  	v_r(sanitize(root_ast), func);
+  else
+    v_r(root_ast, func);
 }
 
 function prototype_assign(statement) {
@@ -119,7 +161,8 @@ function make_variables(var_root) {
 		let v = { name: name.atom };
 		v.init = (name.kids.length > 0 ? name.kids[0] : null);
 		v.loc = get_location(var_root);
-    if (v.init && v.init.op == JSOP_NEWINIT)
+    if (v.init && v.init.op == JSOP_NEWINIT && v.init.kids[0] &&
+        v.init.kids[0].type == 6)
       objects.push(make_object(v));
     else
   		variables.push(v);
@@ -135,6 +178,9 @@ function make_object(stub) {
   let ast = stub.init;
   delete stub['init'];
   for each (let init in ast.kids) {
+    if (init.type != 6) {
+      dump_ast(init);
+    }
     assert(init.type == 6); // TOK_COLON
     if (init.kids[0].type == 29) { // TOK_NAME
       let name = init.kids[0].atom;
@@ -167,7 +213,7 @@ function make_function(func_root) {
 
 function assert(cmd) {
 	if (!cmd) {
-		_print("ACK! I fail!");
+    throw new Error("Assertion failed");
 	}
 }
 
