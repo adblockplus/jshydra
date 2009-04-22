@@ -1,11 +1,13 @@
 // This is a simple test to test global magic
 
 include("../scripts/cleanast.js");
+include("../scripts/dumpast.js");
 
 var glob = this;
 const LS = "foobar";
 
 function process_js(ast) {
+  dump_ast(ast);
 	let toplevel = clean_ast(ast);
 	_print("Global variables:");
 	for each (let v in toplevel.variables) {
