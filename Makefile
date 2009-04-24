@@ -1,4 +1,6 @@
 # You'll need to change the below to match your setup
+# If you're doing a raw spidermonkey build, the two paths should be the same,
+# pointing to the directory that contains js/ from mozilla-central.
 MOZ_OBJDIR := /src/build/trunk/browser
 MOZ_SRCDIR := /src/trunk/mozilla
 
@@ -7,17 +9,8 @@ INCLUDE := -I$(MOZ_OBJDIR)/dist/include/js/ \
 		   -I$(MOZ_SRCDIR)/js/src/
 LINK := -L$(MOZ_OBJDIR)/dist/lib -lnspr4 -lm
 
-OBJS := jsapi.o jsarena.o jsarray.o jsatom.o jsbool.o jscntxt.o jsdate.o \
-	jsdbgapi.o jsdhash.o jsdtoa.o jsemit.o jsexn.o jsfun.o jsgc.o jshash.o \
-	jsinterp.o jsinvoke.o jsiter.o jslock.o jslog2.o jslong.o jsmath.o jsnum.o \
-   	jsobj.o json.o jsopcode.o jsparse.o jsprf.o jsregexp.o jsscan.o jsscope.o \
-	jsscript.o jsstr.o jsutil.o jsxdrapi.o jsxml.o prmjtime.o jstracer.o \
-	Assembler.o Fragmento.o LIR.o RegAlloc.o avmplus.o Nativei386.o jsbuiltins.o
-
-OBJS := $(addprefix $(MOZ_OBJDIR)/js/src/, $(OBJS))
-
 jshydra: jshydra.o jshydra_funcs.o jshydra_bridge.o
-	g++ -o jshydra jshydra.o jshydra_funcs.o jshydra_bridge.o $(OBJS) $(LINK)
+	g++ -o jshydra jshydra.o jshydra_funcs.o jshydra_bridge.o $(MOZ_OBJDIR)/js/src/libjs_static.a $(LINK)
 
 jshydra.o: jshydra.cpp
 	g++ -o jshydra.o -g $(INCLUDE) -c jshydra.cpp

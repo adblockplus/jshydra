@@ -1,7 +1,7 @@
 // Arguments: test_globals.js
 // Name: Global information test
 
-include("../scripts/cleanast.js");
+include("../utils/cleanast.js");
 
 var glob = this;
 const LS = "foobar";
