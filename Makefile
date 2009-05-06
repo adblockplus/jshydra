@@ -1,24 +1,27 @@
-# You'll need to change the below to match your setup
-# If you're doing a raw spidermonkey build, the two paths should be the same,
-# pointing to the directory that contains js/ from mozilla-central.
-MOZ_OBJDIR := /src/build/trunk/browser
-MOZ_SRCDIR := /src/trunk/mozilla
+include config.mk
 
-INCLUDE := -I$(MOZ_OBJDIR)/dist/include/js/ \
-		   -I$(MOZ_OBJDIR)/dist/include/nspr/ -DXP_UNIX \
-		   -I$(MOZ_SRCDIR)/js/src/
+# Defines for the mozilla build system
+DEPTH := $(MOZ_OBJDIR)/js/src
+topsrcdir := $(MOZ_SRCDIR)/js/src
+srcdir := $(MOZ_SRCDIR)/js/src
+MODULE := js
+
+include $(MOZ_OBJDIR)/js/src/config/autoconf.mk
+include $(MOZ_SRCDIR)/js/src/config/config.mk
+
 LINK := -L$(MOZ_OBJDIR)/dist/lib -lnspr4 -lm
 
 jshydra: jshydra.o jshydra_funcs.o jshydra_bridge.o
-	g++ -o jshydra jshydra.o jshydra_funcs.o jshydra_bridge.o $(MOZ_OBJDIR)/js/src/libjs_static.a $(LINK)
+	g++ -o $@ $^ $(MOZ_OBJDIR)/js/src/libjs_static.a $(LINK)
 
-jshydra.o: jshydra.cpp
-	g++ -o jshydra.o -g $(INCLUDE) -c jshydra.cpp
+.deps:
+	@if [ ! -e .deps ]; then mkdir .deps; fi
 
-jshydra_funcs.o: jshydra_funcs.cpp
-	g++ -o jshydra_funcs.o -g $(INCLUDE) -c jshydra_funcs.cpp
-jshydra_bridge.o: jshydra_bridge.cpp
-	g++ -o jshydra_bridge.o -g $(INCLUDE) -c jshydra_bridge.cpp -DDEBUG
+%.o: %.cpp .deps $(MOZ_OBJDIR)/js/src/libjs_static.a
+	$(CXX) -o $@ -c $(COMPILE_CXXFLAGS) $<
+
+clean:
+	@rm -rf jshydra *.o .deps
 
 TESTS := $(notdir $(wildcard autotest/test_*.js))
 check: jshydra
@@ -35,3 +38,6 @@ check: jshydra
 	done && rm .*.out
 
 .PHONY: check
+
+echo-variable-%:
+	@echo "$($*)"

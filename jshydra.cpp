@@ -2,6 +2,7 @@
 #include "jsapi.h"
 #include "jsbit.h" // jsparse.h
 #include "jsscript.h" // jsparse.h
+#include "jsinterp.h" // jsparse.h
 #include "jsparse.h"
 #include "jscntxt.h"
 #include <stdio.h>

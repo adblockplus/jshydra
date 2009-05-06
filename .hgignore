@@ -1,0 +1,6 @@
+^config\.mk$
+^jshydra$
+\.o$
+^\.deps/
+
+^mozilla/
