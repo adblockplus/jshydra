@@ -1,0 +1,52 @@
+#!/bin/bash
+
+usage() {
+echo "Usage: $0 ...
+The following options control the setup for the SpiderMonkey build. Only set these if you wish to reuse source; otherwise, it will be downloaded for you:
+--moz-src 	Location of the mozilla source directory
+--moz-obj	Location of the object directory for the above tree.
+
+Other arguments:
+--moz-repo	Repository to clone the source from"
+}
+
+VAL=
+arg() {
+	VAL=${1#*=}
+}
+
+srcdir=mozilla
+objdir=
+repo='http://hg.mozilla.org/mozilla-central'
+
+until [ -z "$1" ]
+do
+	case "$1" in
+	--moz-src=*)
+		arg $1
+		srcdir="$VAL"
+		if [ -z "$objdir"]; then objdir=$srcdir; fi
+	;;
+	--moz-obj=*)
+		arg $1
+		objdir="$VAL"
+	;;
+	--moz-repo=*)
+		arg $1
+		repo="$VAL"
+	;;
+	-h|--help)
+		usage
+		exit 1
+	esac
+	shift
+done
+
+echo "Source directory: $srcdir"
+echo "Object directory: $objdir"
+echo "Source repository: $repo"
+
+cat >config.mk <<EOF
+MOZ_OBJDIR := $objdir
+MOZ_SRCDIR := $srcdir
+EOF
