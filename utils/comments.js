@@ -7,12 +7,24 @@ function associate_comments(filename, scopeObject) {
 
   // Now, get us a sorted list of all important AST locations
   let locations = [{loc: {line: 0, column: -1}}];
+
+  function add_func(func) {
+    locations.push({loc: func.loc, obj: func, commentWanted: true});
+    // The following will get us to the last line of the function
+    if (func.body.kids.length == 0)
+      return;
+    let last = func.body.kids[func.body.kids.length - 1];
+    while (last.kids[last.kids.length - 1] &&
+        last.kids[last.kids.length - 1].line > last.line)
+      last = last.kids[last.kids.length - 1];
+    locations.push({loc: {line: last.line, column: last.column}});
+  }
   for each (let v in scopeObject.variables)
     locations.push({loc: v.loc, obj: v, commentWanted: true});
   for each (let v in scopeObject.constants)
     locations.push({loc: v.loc, obj: v, commentWanted: true});
   for each (let v in scopeObject.functions)
-    locations.push({loc: v.loc, obj: v, commentWanted: true});
+    add_func(v);
   for each (let v in scopeObject.code)
     locations.push({loc: {line: v.line, column: v.column}, obj: v});
   for each (let o in scopeObject.objects) {
@@ -20,22 +32,22 @@ function associate_comments(filename, scopeObject) {
     for each (let x in o.variables)
       locations.push({loc: x.loc, obj: x, commentWanted: true});
     for each (let x in o.functions)
-      locations.push({loc: x.loc, obj: x, commentWanted: true});
+      add_func(x);
     for each (let x in o.getters)
-      locations.push({loc: x.loc, obj: x, commentWanted: true});
+      add_func(x);
     for each (let x in o.setters)
-      locations.push({loc: x.loc, obj: x, commentWanted: true});
+      add_func(x);
   }
   for each (let o in scopeObject.classes) {
     locations.push({loc: o.loc, obj: o, commentWanted: true});
     for each (let x in o.variables)
       locations.push({loc: x.loc, obj: x, commentWanted: true});
     for each (let x in o.functions)
-      locations.push({loc: x.loc, obj: x, commentWanted: true});
+      add_func(x);
     for each (let x in o.getters)
-      locations.push({loc: x.loc, obj: x, commentWanted: true});
+      add_func(x);
     for each (let x in o.setters)
-      locations.push({loc: x.loc, obj: x, commentWanted: true});
+      add_func(x);
   }
   locations.sort(function (a, b) {
     if (a.loc.line == b.loc.line)
