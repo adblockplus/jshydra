@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# The mozilla-central known-good revision
+REV=ea128fc02710
+
 usage() {
 echo "Usage: $0 ...
 The following options control the setup for the SpiderMonkey build. Only set these if you wish to reuse source; otherwise, it will be downloaded for you:
@@ -16,7 +19,7 @@ arg() {
 }
 
 srcdir=mozilla
-objdir=
+objdir=""
 repo='http://hg.mozilla.org/mozilla-central'
 
 until [ -z "$1" ]
@@ -25,7 +28,6 @@ do
 	--moz-src=*)
 		arg $1
 		srcdir="$VAL"
-		if [ -z "$objdir"]; then objdir=$srcdir; fi
 	;;
 	--moz-obj=*)
 		arg $1
@@ -42,6 +44,8 @@ do
 	shift
 done
 
+if [ -z "$objdir"]; then objdir=$srcdir; fi
+
 echo "Source directory: $srcdir"
 echo "Object directory: $objdir"
 echo "Source repository: $repo"
@@ -50,3 +54,53 @@ cat >config.mk <<EOF
 MOZ_OBJDIR := $objdir
 MOZ_SRCDIR := $srcdir
 EOF
+
+NEEDSBUILD=
+if [ ! -e "$srcdir" ]; then
+	# Time to pull from the repo
+	echo "Cloning from $repo:"
+	hg clone -r $REV $repo $srcdir
+	NEEDSBUILD="true"
+elif hg id -r $REV $srcdir; then
+	# Newer or older?
+	if [[ "$(hg id -n -r $REV $srcdir)" < "$(hg id -n $srcdir)" ]]; then
+		echo "You are using a newer revision than the gold standard."
+		echo "This probably isn't a big deal, but stuff might not work."
+		echo "To get the gold standard, use the following command:"
+		echo "hg up -r $REV -R $srcdir"
+	else
+		echo "You are using an older revision than the gold standard."
+		echo "It is highly recommended that you update to at least this revision."
+		echo "To get the gold standard, use the following command:"
+		echo "hg up -r $REV -R $srcdir"
+	fi
+else
+	# The revision isn't found.. pull and update
+	echo "Updating from $repo:"
+	hg pull -u -r $REV -R $srcdir $repo
+	NEEDSBUILD="true"
+fi
+
+AUTOCONF=$(which autoconf-2.13 autoconf2.13 autoconf213 2>/dev/null | grep -v '^no autoconf' | head -1)
+echo $AUTOCONF
+if [ ! -e $objdir ]; then
+	# We need to make the objdir and configure
+	abssrc=$(cd $srcdir && pwd)
+	mkdir -p $objdir/js/src
+	pushd
+	pushd $objdir/js/src
+	cd $srcdir/js/src && $AUTOCONF
+	popd
+	# Now in objdir
+	$abssrc/js/src/configure
+	make
+	popd
+elif [ $srcdir = $objdir ]; then
+	if [ -n "$NEEDSBUILD" ]; then
+		pushd
+		cd $srcdir/js/src && $AUTOCONF
+		./configure
+		make
+		popd
+	fi
+fi
