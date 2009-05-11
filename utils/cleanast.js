@@ -191,12 +191,19 @@ function make_object(stub) {
         stub.setters[name] = make_function(value);
       else if (value.type == 34) // TOK_FUNCTION
         stub.functions[name] = make_function(value);
-      else if (name == '__proto__' && value.type == 49) { // TOK_NEW
+      else if (name == '__proto__') {
+        let supername;
+        if (value.op == JSOP_NEW)
+          supername = value.kids[0].atom;
+        else if (value.op == JSOP_GETPROP && value.atom == 'prototype')
+          supername = value.kids[0].atom;
+        else
+          assert(false);
         if ('inherits' in stub)
-      stub.inherits.push(value.kids[0].atom);
-    else
-      stub.inherits = [value.kids[0].atom];
-    }
+          stub.inherits.push(supoername);
+        else
+          stub.inherits = [supername];
+      }
       else
         stub.variables[name] = { loc: get_location(value), init: value };
     } else {
