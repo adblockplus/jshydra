@@ -176,7 +176,12 @@ function make_object(stub) {
   stub.getters = {};
   stub.setters = {};
   let ast = stub.init;
+  let proto = stub.init.op == JSOP_GETPROP && stub.init.atom == 'prototype';
   delete stub['init'];
+  if (proto) {
+	  stub.inherits = [ast.kids[0].atom];
+	  return stub;
+  }
   for each (let init in ast.kids) {
     if (init.type != 6) {
       dump_ast(init);
