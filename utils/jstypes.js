@@ -15,14 +15,16 @@ function divine_inheritance(clazz, constants) {
     let xpcom = clazz.variables.QueryInterface.init;
     assert(xpcom.op == JSOP_CALL && xpcom.kids[0].atom == "generateQI");
 
-    clazz.inherits = [];
+    if (!clazz.inherits)
+      clazz.inherits = [];
     for each (let iface in xpcom.kids[1].kids)
       clazz.inherits.push(iface.atom);
     return;
   }
   
   if ("QueryInterface" in clazz.functions) {
-    clazz.inherits = [];
+    if (!clazz.inherits)
+      clazz.inherits = [];
     function findInterfaces(ast) {
 	    if (ast.op == JSOP_GETPROP && ast.kids[0]) {
 		    let check = ast.kids[0];
