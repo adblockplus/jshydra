@@ -68,7 +68,7 @@ elif hg id -r $REV $srcdir; then
 		echo "This probably isn't a big deal, but stuff might not work."
 		echo "To get the gold standard, use the following command:"
 		echo "hg up -r $REV -R $srcdir"
-	else
+	elif [[ "$(hg id -n -r $REV $srcdir)" > "$(hg id -n $srcdir)" ]]; then
 		echo "You are using an older revision than the gold standard."
 		echo "It is highly recommended that you update to at least this revision."
 		echo "To get the gold standard, use the following command:"
@@ -82,7 +82,6 @@ else
 fi
 
 AUTOCONF=$(which autoconf-2.13 autoconf2.13 autoconf213 2>/dev/null | grep -v '^no autoconf' | head -1)
-echo $AUTOCONF
 if [ ! -e $objdir ]; then
 	# We need to make the objdir and configure
 	abssrc=$(cd $srcdir && pwd)
