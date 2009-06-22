@@ -56,6 +56,8 @@ function process_js(ast, f) {
   }
   for each (let v in toplevel.classes) {
     divine_inheritance(v, toplevel.constants);
+    if (v.constructor && v.constructor.comment)
+      _print(v.constructor.comment);
     if (v.comment)
       _print(v.comment);
     let inherits = v.inherits ? (" INHERITS " + v.inherits.join(", ")) : "";
