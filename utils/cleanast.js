@@ -107,7 +107,7 @@ function prototype_assign(statement) {
 
 function make_class(class_root) {
   let clazz = {};
-  
+
   class_root = class_root.kids[0];
   let lhs = class_root.kids[0], rhs = class_root.kids[1];
   if (lhs.atom == "prototype") {
@@ -127,7 +127,8 @@ function merge_class(info_list, obj) {
   for (let i = 0; i < info_list.functions.length; i++) {
     if (info_list.functions[i].name == name) {
       obj.constructor = info_list.functions[i];
-      // XXX: remove from info_list
+      // remove the constructor from the list of global functions
+      info_list.functions.splice(i, 1);
       break;
     }
   }
