@@ -232,7 +232,7 @@ JSObject *makeNode(JSParseNode *node) {
 	return object;
 }
 
-void parseFile(FILE *file, char *filename) {
+void parseFile(FILE *file, char *filename, char *argstr) {
 	JSCompiler compiler(cx, NULL, NULL);
 	if (!compiler.init(NULL, 0, file, filename, 1))
 		return;
@@ -244,11 +244,13 @@ void parseFile(FILE *file, char *filename) {
 		fprintf(stderr, "No function process_js!\n");
 		return;
 	}
-	jsval rval, argv[2];
+	jsval rval, argv[3];
 	argv[0] = OBJECT_TO_JSVAL(ast);
 	JSString *newfname = JS_NewStringCopyZ(cx, filename);
 	argv[1] = STRING_TO_JSVAL(newfname);
-	JS_CallFunctionValue(cx, globalObj, func, 2, argv, &rval);
+	JSString *jsArgStr = JS_NewStringCopyZ(cx, argstr);
+	argv[2] = STRING_TO_JSVAL(jsArgStr);
+	JS_CallFunctionValue(cx, globalObj, func, 3, argv, &rval);
 }
 
 int main(int argc, char **argv) {
@@ -260,15 +262,22 @@ int main(int argc, char **argv) {
 	jshydra_includeScript(cx, argv[1]);
 	argc--;
 	argv++;
+	char *argstr = NULL;
 	do {
 		argc--;
 		argv++;
+		if (!strcmp(argv[0], "--arg")) {
+			argc--;
+			argv++;
+			argstr = argv[0];
+			continue;
+		}
 		FILE *input = fopen(argv[0], "r");
 		if (!input) {
 			fprintf(stderr, "No such file %s\n", argv[0]);
 			continue;
 		}
-		parseFile(input, argv[0]);
+		parseFile(input, argv[0], argstr);
 	} while (argc > 1);
 
 	return 0;
