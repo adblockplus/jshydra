@@ -4,6 +4,8 @@
 function associate_comments(filename, scopeObject) {
   // Read the script and give us line stuff
   let file = read_file(filename).split(/\r\n|[\r\n]/);
+  // make file 1-based to avoid off-by-one errors...
+  file.unshift("");
 
   // Now, get us a sorted list of all important AST locations
   let locations = [{loc: {line: 0, column: -1}}];
@@ -68,11 +70,11 @@ function associate_comments(filename, scopeObject) {
 let comment_regex = /\/\*[\s\S]*?\*\/|\/\/.*?\n/mg;
 function find_comments(start, end, file) {
   let lines = [];
-  lines[0] = file[start.line].substr(start.column + 1).trim();
+  lines[0] = file[start.line].substring(start.column + 1).trim();
   for (let l = start.line + 1; l < end.line; l++) {
     lines.push(file[l].trim());
   }
-  lines.push(file[end.line].substr(0, end.column).trim());
+  lines.push(file[end.line].substring(0, end.column).trim());
 
   let goop = lines.join("\n");
   let match;
