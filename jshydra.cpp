@@ -187,7 +187,8 @@ JSObject *makeNode(JSParseNode *node) {
 		JS_DefineProperty(cx, object, "atom", ATOM_KEY(node->pn_atom), NULL, NULL, JSPROP_READONLY | JSPROP_ENUMERATE);
 		setIntProperty(object, "flags", node->pn_dflags);
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
-		if (!node->pn_used)
+		// This is only valid for PN_NAME objects--some are not quite PN_NAME.
+		if (!node->pn_used && node->pn_arity == PN_NAME)
 			setArrayElement(array, 0, makeNode(node->pn_expr));
 		setObjectProperty(object, "kids", array);
 		break;
