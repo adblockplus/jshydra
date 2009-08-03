@@ -14,8 +14,7 @@
  * Takes the node rooted at the AST and decomposes it into readable sections.
  */
 function clean_ast(ast) {
-  // TOK_LC
-  assert(ast.type == 25);
+  assert(ast.type == TOK_LC);
   let info = {
     variables: [],
     constants: [],
@@ -34,7 +33,7 @@ function clean_ast(ast) {
       let ret = make_variables(statement);
       info.constants = info.constants.concat(ret.vars);
       info.objects = info.objects.concat(ret.objs);
-    } else if (statement.type == 34) { // TOK_FUNCTION
+    } else if (statement.type == TOK_FUNCTION) {
       info.functions.push(make_function(statement));
     } else if (prototype_assign(statement)) {
       let obj = make_class(statement);
@@ -86,10 +85,10 @@ function visit(root_ast, func, to_expand) {
 }
 
 function prototype_assign(statement) {
-  if (statement.type != 2 || !statement.kids[0]) // TOK_SEMI
+  if (statement.type != TOK_SEMI || !statement.kids[0])
     return false;
   statement = statement.kids[0];
-  if (statement.type != 4 || !statement.kids[0]) // TOK_ASSIGN
+  if (statement.type != TOK_ASSIGN || !statement.kids[0])
     return false;
 
   statement = statement.kids[0];
@@ -163,7 +162,7 @@ function make_variables(var_root) {
     v.init = (name.kids.length > 0 ? name.kids[0] : null);
     v.loc = get_location(var_root);
     if (v.init && v.init.op == JSOP_NEWINIT && v.init.kids[0] &&
-        v.init.kids[0].type == 6)
+        v.init.kids[0].type == TOK_COLON)
       objects.push(make_object(v));
     else
       variables.push(v);
@@ -184,18 +183,18 @@ function make_object(stub) {
 	  return stub;
   }
   for each (let init in ast.kids) {
-    if (init.type != 6) {
+    if (init.type != TOK_COLON) {
       dump_ast(init);
     }
-    assert(init.type == 6); // TOK_COLON
-    if (init.kids[0].type == 29) { // TOK_NAME
+    assert(init.type == TOK_COLON);
+    if (init.kids[0].type == TOK_NAME) {
       let name = init.kids[0].atom;
       let value = init.kids[1];
       if (init.op == JSOP_GETTER)
         stub.getters[name] = make_function(value);
       else if (init.op == JSOP_SETTER)
         stub.setters[name] = make_function(value);
-      else if (value.type == 34) // TOK_FUNCTION
+      else if (value.type == TOK_FUNCTION)
         stub.functions[name] = make_function(value);
       else if (name == '__proto__') {
         let supername;
@@ -220,13 +219,13 @@ function make_object(stub) {
 }
 
 function make_function(func_root) {
-  assert(func_root.type == 34); // TOK_FUNCTION
+  assert(func_root.type == TOK_FUNCTION);
   let stmts = func_root.kids[0];
-  if (stmts.type == 85) // TOK_UPVARS
+  if (stmts.type == TOK_UPVARS)
     stmts = stmts.kids[0];
-  if (stmts.type == 84) // TOK_ARGSBODY
+  if (stmts.type == TOK_ARGSBODY)
     stmts = stmts.kids[stmts.kids.length - 1];
-  assert(stmts.type == 25);
+  assert(stmts.type == TOK_LC);
   return { name: func_root.name, body: stmts, loc: get_location(func_root)};
 }
 

@@ -10,7 +10,8 @@ function dump_ast(ast, prefix) {
 	for (let key in ast) {
 		if (key == 'column' || key == 'line' || key == 'kids')
 			continue;
-		let val = (key == 'op' ? decode_op(ast[key]) : ast[key]);
+		let val = (key == 'op' ? decode_op(ast[key]) :
+				key == 'type' ? decode_type(ast[key]) : ast[key]);
 		str += key + ": " + val + "; ";
 	}
 	str += ast.line + ":" + ast.column;
@@ -22,17 +23,30 @@ function dump_ast(ast, prefix) {
 }
 
 var global = this;
-var table = null;
+var optable = null, toktable;
 function decode_op(opcode) {
-	if (!table) {
-		table = [];
+	if (!optable) {
+		optable = [];
 		for (let key in global) {
 			if (key.indexOf("JSOP_") == 0) {
-				table[global[key]] = key;
+				optable[global[key]] = key;
 			}
 		}
 	}
-	if (opcode in table)
-		return table[opcode];
+	if (opcode in optable)
+		return optable[opcode];
+	return opcode;
+}
+function decode_type(opcode) {
+	if (!toktable) {
+		toktable = [];
+		for (let key in global) {
+			if (key.indexOf("TOK_") == 0) {
+				toktable[global[key]] = key;
+			}
+		}
+	}
+	if (opcode in toktable)
+		return toktable[opcode];
 	return opcode;
 }
