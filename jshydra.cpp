@@ -29,95 +29,10 @@ typedef enum TokenValue {
 } TokenValue;
 
 TokenValue tokens[] = {
-    NULLARY, /*TOK_EOF*/
-    ERROR, /*TOK_EOL*/
-    UNARY, /*TOK_SEMI*/
-    LIST, /*TOK_COMMA*/
-    BINARY, /*TOK_ASSIGN*/
-    TERNARY, /*TOK_HOOK*/
-	NAME, /*TOK_COLON*/
-    BINARY, /*TOK_OR*/
-    BINARY, /*TOK_AND*/
-    BINARY, /*TOK_BITOR*/
-    BINARY, /*TOK_BITXOR*/
-    BINARY, /*TOK_BITAND*/
-    BINARY, /*TOK_EQOP*/
-    BINARY, /*TOK_RELOP*/
-    BINARY, /*TOK_SHOP*/
-    BINARY, /*TOK_PLUS*/
-    BINARY, /*TOK_MINUS*/
-    BINARY, /*TOK_STAR*/
-	BINARY, /*TOK_DIVOP*/
-    UNARY, /*TOK_UNARYOP*/
-    UNARY, /*TOK_INC*/
-	UNARY, /*TOK_DEC*/
-    NAME, /*TOK_DOT*/
-    BINARY, /*TOK_LB*/
-	LIST, /*TOK_RB*/
-    LIST, /*TOK_LC*/
-	LIST, /*TOK_RC*/
-    LIST, /*TOK_LP*/
-	UNARY, /*TOK_RP*/
-    NAME, /*TOK_NAME*/
-    DOUBLELITERAL, /*TOK_NUMBER*/
-    NAME, /*TOK_STRING*/
-    OBJLITERAL, /*TOK_REGEXP*/
-    NULLARY, /*TOK_PRIMARY*/
-    FUNCTION, /*TOK_FUNCTION*/
-    TERNARY, /*TOK_IF*/
-    ERROR, /*TOK_ELSE (not present) */
-    BINARY, /*TOK_SWITCH*/
-    BINARY, /*TOK_CASE*/
-    BINARY, /*TOK_DEFAULT*/
-    BINARY, /*TOK_WHILE*/
-    BINARY, /*TOK_DO*/
-    BINARY, /*TOK_FOR*/
-    NAME, /*TOK_BREAK*/
-    NAME, /*TOK_CONTINUE*/
-    BINARY, /*TOK_IN*/
-    LIST, /*TOK_VAR*/
-    BINARY, /*TOK_WITH*/
-    UNARY, /*TOK_RETURN*/
-    LIST, /*TOK_NEW*/
-    UNARY, /*TOK_DELETE*/
-    UNARY, /*TOK_DEFSHARP*/
-    NULLARY, /*TOK_USESHARP (use pn_num)*/
-    TERNARY, /*TOK_TRY*/
-    TERNARY, /*TOK_CATCH*/
-    ERROR, /*TOK_FINALLY*/
-    UNARY, /*TOK_THROW*/
-    BINARY, /*TOK_INSTANCEOF*/
-    ERROR, /*TOK_DEBUGGER*/
-    ERROR, /*TOK_XMLSTAGO*/
-    ERROR, /*TOK_XMLETAGO*/
-    ERROR, /*TOK_XMLPTAGC*/
-    ERROR, /*TOK_XMLTAGC*/
-    ERROR, /*TOK_XMLNAME*/
-    ERROR, /*TOK_XMLATTR*/
-    ERROR, /*TOK_XMLSPACE*/
-    ERROR, /*TOK_XMLTEXT*/
-    ERROR, /*TOK_XMLCOMMENT*/
-    ERROR, /*TOK_XMLCDATA*/
-    ERROR, /*TOK_XMLPI*/
-    ERROR, /*TOK_AT*/
-    ERROR, /*TOK_DBLCOLON*/
-    ERROR, /*TOK_ANYNAME*/
-    NAME, /*TOK_DBLDOT*/
-    ERROR, /*TOK_FILTER*/
-    ERROR, /*TOK_XMLELEM*/
-    ERROR, /*TOK_XMLLIST*/
-    ERROR, /*TOK_YIELD*/
-    LIST, /*TOK_ARRAYCOMP*/
-    UNARY, /*TOK_ARRAYPUSH*/
-    LEXICAL, /*TOK_LEXICALSCOPE*/
-    LIST, /*TOK_LET*/
-    ERROR, /*TOK_SEQ*/
-    TERNARY, /*TOK_FORHEAD*/
-	LIST, /*TOK_ARGSBODY */
-	NAMESET, /*TOK_UPVARS */
-    LIST, /*TOK_RESERVED [I don't understand this...] */
-    //TOK_LIMIT
-	ERROR
+#define TOK(name, value) value,
+#include "jshydra_tokens.h"
+#undef TOK
+    ERROR //TOK_LIMIT
 };
 
 TokenValue arityFix[] = {NULLARY, UNARY, BINARY, TERNARY, FUNCTION, LIST, NAME};

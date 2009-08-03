@@ -16,6 +16,13 @@ static const char *opcodes[] = {
 	NULL
 };
 
+static const char *tokens[] = {
+#define TOK(name, value) #name,
+#include "jshydra_tokens.h"
+#undef TOK
+	NULL
+};
+
 JSRuntime *rt;
 JSContext *cx;
 JSObject *globalObj;
@@ -102,6 +109,10 @@ void jshydra_init(const char *file) {
   while (*name) {
 	  jshydra_defineProperty(cx, globalObj, *name++, INT_TO_JSVAL(index++));
   }
+  index = 0;
+  name = tokens;
+  while (*name)
+	  jshydra_defineProperty(cx, globalObj, *name++, INT_TO_JSVAL(index++));
 
   rootArray = JS_NewArrayObject(cx, 0, NULL);
   JS_AddRoot(cx, &rootArray);
