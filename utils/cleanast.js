@@ -225,6 +225,14 @@ function make_function(func_root) {
     stmts = stmts.kids[0];
   if (stmts.type == TOK_ARGSBODY)
     stmts = stmts.kids[stmts.kids.length - 1];
+  if (stmts.type == TOK_RETURN) {
+    // This is a lambda function. For simplicity's sake, I'm going to turn this
+    // into a regular function by wrapping with TOK_LC (consumers of functions
+    // will find this easier to use)
+    let newtop = { fakeNode: true, line: stmts.line, col: stmts.col,
+      type: TOK_LC, op: JSOP_NOP, kids: [stmts]};
+    stmts = newtop;
+  }
   assert(stmts.type == TOK_LC);
   return { name: func_root.name, body: stmts, loc: get_location(func_root)};
 }
