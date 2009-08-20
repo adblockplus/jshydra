@@ -84,14 +84,17 @@ JSObject *makeNode(JSParseNode *node) {
 		setObjectProperty(object, "kids", array);
 		break;
 	}
-	case BINARY: {
-		jshydra_defineProperty(cx, object, "value", node->pn_val);
-		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
-		setArrayElement(array, 0, makeNode(node->pn_left));
-		setArrayElement(array, 1, makeNode(node->pn_right));
-		setObjectProperty(object, "kids", array);
-		break;
-	}
+  case BINARY: {
+    jshydra_defineProperty(cx, object, "value", node->pn_val);
+    // This is how for and for each are distinguished...
+    if (node->pn_type == TOK_FOR)
+      setIntProperty(object, "iflags", node->pn_iflags);
+    JSObject *array = JS_NewArrayObject(cx, 0, NULL);
+    setArrayElement(array, 0, makeNode(node->pn_left));
+    setArrayElement(array, 1, makeNode(node->pn_right));
+    setObjectProperty(object, "kids", array);
+    break;
+  }
 	case UNARY: {
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
 		setArrayElement(array, 0, makeNode(node->pn_kid));
@@ -121,11 +124,16 @@ JSObject *makeNode(JSParseNode *node) {
 		break;
 	}
 	//case APAIR:
-	case OBJLITERAL: {
-    setObjectProperty(object, "value", node->pn_objbox->object);
-		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
-		setArrayElement(array, 0, makeNode(node->pn_expr));
-		setObjectProperty(object, "kids", array);
+  case OBJLITERAL: {
+    // The object in the parse tree is not itself sufficient to really act as a
+    // parse node, so we clone the object to get the right prototype stuff.
+    JSObject *regex = js_CloneRegExpObject(cx, node->pn_objbox->object,
+      globalObj);
+    setObjectProperty(object, "value", regex);
+    JSObject *array = JS_NewArrayObject(cx, 0, NULL);
+    setArrayElement(array, 0, makeNode(node->pn_expr));
+    setObjectProperty(object, "kids", array);
+    break;
   }
 	case DOUBLELITERAL: {
 		jsval dval;
