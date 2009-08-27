@@ -86,9 +86,9 @@ if [ ! -e $objdir ]; then
 	# We need to make the objdir and configure
 	abssrc=$(cd $srcdir && pwd)
 	mkdir -p $objdir/js/src
-	pushd
 	pushd $objdir/js/src
-	cd $srcdir/js/src && $AUTOCONF
+	pushd $srcdir/js/src
+	$AUTOCONF
 	popd
 	# Now in objdir
 	$abssrc/js/src/configure
@@ -96,8 +96,8 @@ if [ ! -e $objdir ]; then
 	popd
 elif [ $srcdir = $objdir ]; then
 	if [ -n "$NEEDSBUILD" ]; then
-		pushd
-		cd $srcdir/js/src && $AUTOCONF
+		pushd $srcdir/js/src
+    $AUTOCONF
 		./configure
 		make
 		popd
