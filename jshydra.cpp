@@ -1,10 +1,10 @@
 #include <string.h> // Needed for jsparse.h
 #include "jsapi.h"
+#include "jscntxt.h"
 #include "jsbit.h" // jsparse.h
 #include "jsscript.h" // jsparse.h
 #include "jsinterp.h" // jsparse.h
 #include "jsparse.h"
-#include "jscntxt.h"
 #include <stdio.h>
 
 #include "jshydra_bridge.h"
