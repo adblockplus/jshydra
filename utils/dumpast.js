@@ -60,7 +60,7 @@ function dump_trueast(ast, prefix) {
 	let str = prefix + "+ ";
   _print(prefix + ast.type + " @ " + ast.location + ":");
 	for (let key in ast) {
-		if (key == 'type' || key == 'location')
+		if (key == 'type' || key == 'location' || key == 'visit')
 			continue;
     let val = ast[key];
     if (val instanceof Array) {

@@ -4,3 +4,4 @@
 ^\.deps/
 
 ^mozilla/
+^jstest/

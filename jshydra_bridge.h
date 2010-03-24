@@ -28,6 +28,7 @@ jsuint jshydra_getArrayLength(JSContext *cx, JSObject *array);
 jsval jshydra_getToplevelFunction(JSContext *cx, char const *name);
 
 void jshydra_rootObject(JSContext *cx, JSObject *obj);
+JSObject *jshydra_getRegexPrototype(JSContext *cx);
 
 JSObject *jshydra_getRegexPrototype(JSContext *cx);
 #endif

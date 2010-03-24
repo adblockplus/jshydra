@@ -6,11 +6,12 @@ REV=ea128fc02710
 usage() {
 echo "Usage: $0 ...
 The following options control the setup for the SpiderMonkey build. Only set these if you wish to reuse source; otherwise, it will be downloaded for you:
---moz-src 	Location of the mozilla source directory
---moz-obj	Location of the object directory for the above tree.
+--moz-src              Location of the mozilla source directory
+--moz-obj	             Location of the object directory for the above tree.
 
 Other arguments:
---moz-repo	Repository to clone the source from"
+--moz-repo	           Repository to clone the source from
+--enable-parse-test    Enables use of parse tests for jshydra"
 }
 
 VAL=
@@ -37,6 +38,9 @@ do
 		arg $1
 		repo="$VAL"
 	;;
+  --enable-parse-test)
+    parse="TRUE"
+  ;;
 	-h|--help)
 		usage
 		exit 1
@@ -79,6 +83,11 @@ else
 	echo "Updating from $repo:"
 	hg pull -u -r $REV -R $srcdir $repo
 	NEEDSBUILD="true"
+fi
+
+if [ ! -z $parse ]; then
+  cvs -d :pserver:anonymous@cvs-mirror.mozilla.org:/cvsroot co -d jstest \
+    mozilla/js/tests
 fi
 
 AUTOCONF=$(which autoconf-2.13 autoconf2.13 autoconf213 2>/dev/null | grep -v '^no autoconf' | head -1)
