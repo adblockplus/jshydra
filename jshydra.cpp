@@ -128,7 +128,7 @@ JSObject *makeNode(JSParseNode *node) {
     // The object in the parse tree is not itself sufficient to really act as a
     // parse node, so we clone the object to get the right prototype stuff.
     JSObject *regex = js_CloneRegExpObject(cx, node->pn_objbox->object,
-      globalObj);
+      jshydra_getRegexPrototype(cx));
     setObjectProperty(object, "value", regex);
     JSObject *array = JS_NewArrayObject(cx, 0, NULL);
     setArrayElement(array, 0, makeNode(node->pn_expr));
@@ -155,17 +155,17 @@ JSObject *makeNode(JSParseNode *node) {
 	return object;
 }
 
-void parseFile(FILE *file, char *filename, char *argstr) {
+bool parseFile(FILE *file, char *filename, char *argstr) {
 	JSCompiler compiler(cx, NULL, NULL);
 	if (!compiler.init(NULL, 0, file, filename, 1))
-		return;
+		return false;
 	JSParseNode *root = compiler.parse(globalObj);
 	JSObject *ast = makeNode(root);
 	jshydra_rootObject(cx, ast);
 	jsval func = jshydra_getToplevelFunction(cx, "process_js");
 	if (JS_TypeOfValue(cx, func) != JSTYPE_FUNCTION) {
 		fprintf(stderr, "No function process_js!\n");
-		return;
+		return false;
 	}
 	jsval rval, argv[3];
 	argv[0] = OBJECT_TO_JSVAL(ast);
@@ -173,11 +173,11 @@ void parseFile(FILE *file, char *filename, char *argstr) {
 	argv[1] = STRING_TO_JSVAL(newfname);
 	JSString *jsArgStr = JS_NewStringCopyZ(cx, argstr);
 	argv[2] = STRING_TO_JSVAL(jsArgStr);
-	JS_CallFunctionValue(cx, globalObj, func, 3, argv, &rval);
+	return JS_CallFunctionValue(cx, globalObj, func, 3, argv, &rval);
 }
 
 int main(int argc, char **argv) {
-	if (argc < 2) {
+	if (argc < 3) {
 		fprintf(stderr, "Usage: %s script filename...\n", argv[0]);
 		return -1;
 	}
@@ -186,6 +186,8 @@ int main(int argc, char **argv) {
 	argc--;
 	argv++;
 	char *argstr = NULL;
+
+  bool failure = false;
 	do {
 		argc--;
 		argv++;
@@ -200,8 +202,10 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "No such file %s\n", argv[0]);
 			continue;
 		}
-		parseFile(input, argv[0], argstr);
+		failure |= !parseFile(input, argv[0], argstr);
+    if (failure)
+      fprintf(stderr, "Failure happened on input %s\n", argv[0]);
 	} while (argc > 1);
 
-	return 0;
+	return !!failure;
 }
