@@ -53,7 +53,7 @@ function visit(root_ast, func, to_expand) {
   function v_r(ast, func) {
     if (ast == null)
       return;
-    func(ast);
+    if (func(ast)) return;
     for each (let child in ast.kids)
       v_r(child, func);
   }

@@ -273,3 +273,13 @@ void jshydra_rootObject(JSContext *cx, JSObject *obj) {
   argv[0] = OBJECT_TO_JSVAL(obj);
   JS_CallFunctionName(cx, rootArray, "push", 1, argv, &rval);
 }
+
+JSObject *jshydra_getRegexPrototype(JSContext *cx) {
+  static JSObject *proto = NULL;
+  if (proto == NULL) {
+    char str[1];
+    JSObject *regex = JS_NewRegExpObject(cx, str, 0, 0);
+    proto = JS_GetPrototype(cx, regex);
+  }
+  return proto;
+}

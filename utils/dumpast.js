@@ -11,7 +11,8 @@ function dump_ast(ast, prefix) {
 		if (key == 'column' || key == 'line' || key == 'kids')
 			continue;
 		let val = (key == 'op' ? decode_op(ast[key]) :
-        key == 'type' ? decode_type(ast[key]) : ast[key]);
+        key == 'type' ? decode_type(ast[key]) :
+        key == 'flags' ? ('0x' + ast[key].toString(16)) : ast[key]);
 		str += key + ": " + val + "; ";
 	}
 	str += ast.line + ":" + ast.column;
