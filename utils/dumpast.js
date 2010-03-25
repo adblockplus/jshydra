@@ -51,3 +51,29 @@ function decode_type(opcode) {
 		return toktable[opcode];
 	return opcode;
 }
+
+function dump_trueast(ast, prefix) {
+  if (ast == null)
+    return;
+	if (!prefix)
+		prefix = "";
+	let str = prefix + "+ ";
+  _print(prefix + ast.type + " @ " + ast.location + ":");
+	for (let key in ast) {
+		if (key == 'type' || key == 'location')
+			continue;
+    let val = ast[key];
+    if (val instanceof Array) {
+      _print(prefix + " + " + key + ": [");
+      for each (let kind in val) {
+        dump_trueast(kind, prefix + "   ");
+      }
+      _print(prefix + "   ]");
+    } else if (val instanceof Object && "type" in val) {
+      _print(prefix + " + " + key + ":");
+      dump_trueast(val, prefix + "   ");
+    } else {
+      _print(prefix + " + " + key + ": " + val);
+    }
+	}
+}

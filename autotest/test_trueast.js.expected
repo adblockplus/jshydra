@@ -1,0 +1,50 @@
+Program @ 0:0:
+ + sourceElements: [
+   ExpressionStatement @ 4:0:
+    + expr:
+      CallExpression @ 4:0:
+       + func:
+         IdentifierExpression @ 4:0:
+          + name: include
+       + arguments: [
+         LiteralExpression @ 4:8:
+          + objtype: string
+          + value: ../utils/astml.js
+         ]
+   FunctionDeclaration @ 6:0:
+    + name: process_js
+    + arguments: [
+      Parameter @ 6:20:
+       + name: pn
+      Parameter @ 6:24:
+       + name: file
+      ]
+    + body:
+      BlockStatement @ 6:30:
+       + statements: [
+         VarStatement @ 7:2:
+          + variables: [
+            VarDeclaration @ 7:6:
+             + name: ast
+             + initializer:
+               CallExpression @ 7:12:
+                + func:
+                  IdentifierExpression @ 7:12:
+                   + name: makeAST
+                + arguments: [
+                  IdentifierExpression @ 7:20:
+                   + name: pn
+                  ]
+            ]
+         ExpressionStatement @ 8:2:
+          + expr:
+            CallExpression @ 8:2:
+             + func:
+               IdentifierExpression @ 8:2:
+                + name: dump_trueast
+             + arguments: [
+               IdentifierExpression @ 8:15:
+                + name: ast
+               ]
+         ]
+   ]

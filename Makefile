@@ -11,7 +11,7 @@ include $(MOZ_SRCDIR)/js/src/config/config.mk
 
 LINK := -L$(MOZ_OBJDIR)/dist/lib -lnspr4 -lm
 
-jshydra: jshydra.o jshydra_funcs.o jshydra_bridge.o
+jshydra: jshydra.o jshydra_funcs.o jshydra_bridge.o jshydra_ast.o
 	g++ -o $@ $^ $(MOZ_OBJDIR)/js/src/libjs_static.a $(LINK)
 
 .deps:
