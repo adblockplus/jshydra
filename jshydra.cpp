@@ -9,6 +9,16 @@
 
 #include "jshydra_bridge.h"
 
+struct ASTNode {
+  JSTokenType type;
+  JSTokenPos position;
+  ASTNode *firstChild;
+  ASTNode *nextSibling;
+  void *data;
+};
+
+extern  ASTNode *parseNodeToASTNode(JSParseNode *node);
+
 void setIntProperty(JSObject *obj, const char *name, int value) {
 	jshydra_defineProperty(cx, obj, name, INT_TO_JSVAL(value));
 }
@@ -99,6 +109,7 @@ JSObject *makeNode(JSParseNode *node) {
 		JSObject *array = JS_NewArrayObject(cx, 0, NULL);
 		setArrayElement(array, 0, makeNode(node->pn_kid));
 		setObjectProperty(object, "kids", array);
+    jshydra_defineProperty(cx, object, "number", INT_TO_JSVAL(node->pn_num));
 		break;
 	}
 	case NAME: {
@@ -144,8 +155,10 @@ JSObject *makeNode(JSParseNode *node) {
 		jshydra_defineProperty(cx, object, "value", dval);
 		break;
 	}
-	case NULLARY:
+	case NULLARY: {
+    jshydra_defineProperty(cx, object, "number", INT_TO_JSVAL(node->pn_num));
 		break;
+                }
 	case ERROR:
 	default:
 		fprintf(stderr, "Unexpected type: %d (arity %d)\n", node->pn_type, node->pn_arity);

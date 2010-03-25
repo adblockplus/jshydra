@@ -3,7 +3,7 @@
 // jshydra.
 _print("HI!");
 function process_js(ast) {
-	for (f in ast) {
+	for (let f in ast) {
 		_print(f + ": "+ ast[f]);
 	}
 	_print(uneval(ast));
