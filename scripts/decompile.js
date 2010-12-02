@@ -187,6 +187,7 @@ let visitor = {
     }
     output(")");
     this._visitNeedBlock(stmt.body);
+    return true;
   },
   visitDebuggerStatement: function (stmt) { output("debugger;").flush(); },
 
