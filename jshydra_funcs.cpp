@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "jsapi.h"
+#include "jsprf.h"
 #include "jshydra_funcs.h"
 #include "jshydra_bridge.h"
 
@@ -290,7 +291,7 @@ JSBool Hashcode(JSContext *cx, JSObject *obj_this, uintN argc,
     static int counter = 0;
     char str[256];
     jsval val;
-    snprintf (str, sizeof (str), "%x", ++counter);
+    JS_snprintf (str, sizeof (str), "%x", ++counter);
     val = STRING_TO_JSVAL (JS_NewStringCopyZ (cx, str));
     JS_DefineProperty (cx, obj, "_hashcode", val,
                        NULL, NULL, JSPROP_PERMANENT | JSPROP_READONLY);
