@@ -364,7 +364,7 @@ function convertTOK_RC(pn) {
 }
 
 function convertTOK_LP(pn) {
-  if (pn.op != JSOP_CALL) {
+  if (pn.op != JSOP_CALL && pn.op != JSOP_APPLY) {
     let ast = shellNode(pn, "LetStatement");
     ast.variables = [parseToAst(x) for each (x in pn.kids)];
     return ast;
