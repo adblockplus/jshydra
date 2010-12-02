@@ -199,7 +199,7 @@ let visitor = {
     if (needparen)
       output(")");
 
-    if ("constmember" in expr)
+    if ("constmember" in expr && /^[_a-zA-Z]\w*$/.test(expr.constmember))
       output(".").output(expr.constmember);
     else {
       output("[");
