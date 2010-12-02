@@ -1,6 +1,8 @@
 /* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 #include "jsapi.h"
+#ifndef XP_WIN
 #include <unistd.h>
+#endif // XP_WIN
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

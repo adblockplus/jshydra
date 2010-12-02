@@ -11,26 +11,30 @@ include $(MOZ_SRCDIR)/js/src/config/config.mk
 
 LINK := -L$(MOZ_OBJDIR)/dist/lib -lnspr4 -lm
 
-jshydra: jshydra.o jshydra_funcs.o jshydra_bridge.o
-	g++ -o $@ $^ $(MOZ_OBJDIR)/js/src/libjs_static.a $(LINK)
+jshydra$(BIN_SUFFIX): jshydra.$(OBJ_SUFFIX) jshydra_funcs.$(OBJ_SUFFIX) jshydra_bridge.$(OBJ_SUFFIX) $(MOZ_OBJDIR)/js/src/$(LIB_PREFIX)js_static.$(LIB_SUFFIX)
+ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
+	$(LD) -nologo -out:$@ $^ $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+else
+	g++ -o $@ $^ $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+endif
 
 .deps:
 	@if [ ! -e .deps ]; then mkdir .deps; fi
 
-%.o: %.cpp .deps $(MOZ_OBJDIR)/js/src/libjs_static.a
+%.$(OBJ_SUFFIX): %.cpp .deps $(MOZ_OBJDIR)/js/src/$(LIB_PREFIX)js_static.$(LIB_SUFFIX)
 	$(CXX) -o $@ -c $(COMPILE_CXXFLAGS) $<
 
 clean:
-	@rm -rf jshydra *.o .deps
+	@rm -rf jshydra$(BIN_SUFFIX) *.$(OBJ_SUFFIX) *.$(LIB_SUFFIX) .deps
 
 -include $(wildcard .deps/*.pp)
 
 TESTS := $(notdir $(wildcard autotest/test_*.js))
-check:: jshydra
+check:: jshydra$(BIN_SUFFIX)
 	@cd autotest && for f in $(TESTS); do \
 		eval $$(cat $$f | sed -e '/^\/\/ [A-Za-z]*:/!q' -e 's+^// \([A-Za-z]*\): \(.*\)$$+export \1="\2"+'); \
 		echo -n "$$Name... "; \
-		../jshydra $$f $$Arguments &> .$$f.out; \
+		../jshydra$(BIN_SUFFIX) $$f $$Arguments &> .$$f.out; \
 		if diff -q ".$$f.out" "$$f.expected" &>/dev/null; then \
 			echo ' passed!'; \
 		else \
@@ -44,12 +48,12 @@ check:: jshydra
 echo-variable-%:
 	@echo "$($*)"
 
-full-check:: jshydra
+full-check:: jshydra$(BIN_SUFFIX)
 	@cp -R $(MOZ_SRCDIR)/js/src/tests jstest
 	@echo "Decompiling JS ASTs.."
 	set -e; \
 	for f in $$(find jstest -name '*.js'); do \
 		echo $$f; \
-		./jshydra scripts/decompile.js "$(MOZ_SRCDIR)/js/src/tests$${f#jstest}" >$$f; \
+		./jshydra$(BIN_SUFFIX) scripts/decompile.js "$(MOZ_SRCDIR)/js/src/tests$${f#jstest}" >$$f; \
 	done
 	#python jstest/jstests.py --tinderbox fake_js.sh
