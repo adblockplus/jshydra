@@ -40,8 +40,8 @@ let visitor = {
     this._visitArray(func.arguments, '(', ') ');
     if (func.body.type == "EmptyStatement")
       output("{ }");
-
-    func.body.visit(this);
+    else
+      func.body.visit(this);
     return true;
   },
   visitParameter: function (p) {
