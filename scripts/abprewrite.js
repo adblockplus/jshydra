@@ -285,6 +285,32 @@ let modifier =
   {
     if (stmt.rhs && stmt.rhs.type == "ObjectLiteral" && stmt.rhs.setters)
     {
+      // Convert prototype chains:
+      // Foo.prototype = {
+      //   __proto__: Bar.prototype,
+      //   ...
+      // };
+      //
+      // Change into:
+      // Foo.prototype = _extend44(Bar, {
+      //   ...
+      // });
+      //
+      // Also changes the superclass constructor to allow instantiation without
+      // running initialization:
+      // function Bar() {
+      //   ...
+      // }
+      //
+      // Change into:
+      // function Bar() {
+      //   if (arguments[0] == _extendInitiated55)
+      //     return;
+      //   ...
+      // }
+      //
+      // Any __proto__ entries not pointing to a function (__proto__: null) are
+      // removed.
       let parent = null;
       for (let i = 0; i < stmt.rhs.setters.length; i++)
       {
