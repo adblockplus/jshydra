@@ -111,8 +111,6 @@ let modifier =
 {
   _tempVarCount: 0,
   _extendFunctionName: null,
-  _extendVarName: null,
-  _potentialConstructors: {},
 
   _shouldRemoveStatement: function(stmt)
   {
@@ -274,13 +272,6 @@ let modifier =
       stmt.vartype = "var";
   },
 
-  visitFunctionDeclaration: function(stmt)
-  {
-    // This might be a constructor, store it so that visitAssignmentExpression
-    // can look it up later
-    this._potentialConstructors[stmt.name] = stmt;
-  },
-
   visitAssignmentExpression: function(stmt)
   {
     if (stmt.rhs && stmt.rhs.type == "ObjectLiteral" && stmt.rhs.setters)
@@ -295,19 +286,6 @@ let modifier =
       // Foo.prototype = _extend44(Bar, {
       //   ...
       // });
-      //
-      // Also changes the superclass constructor to allow instantiation without
-      // running initialization:
-      // function Bar() {
-      //   ...
-      // }
-      //
-      // Change into:
-      // function Bar() {
-      //   if (arguments[0] == _extendInitiated55)
-      //     return;
-      //   ...
-      // }
       //
       // Any __proto__ entries not pointing to a function (__proto__: null) are
       // removed.
@@ -329,39 +307,15 @@ let modifier =
       {
         if (this._extendFunctionName == null)
         {
-          this._extendVarName = "_extendInitiated" + this._tempVarCount++;
           this._extendFunctionName = "_extend" + this._tempVarCount++;
-          _print("var " + this._extendVarName + " = {};");
           _print("function " + this._extendFunctionName + "(baseClass, props) {");
-          _print("  var result = new baseClass(" + this._extendVarName + ");");
+          _print("  var dummyConstructor = function() {};");
+          _print("  dummyConstructor.prototype = baseClass.prototype;");
+          _print("  var result = new dummyConstructor();");
           _print("  for (var k in props)");
           _print("    result[k] = props[k];");
           _print("  return result;");
           _print("}");
-        }
-
-        if (parent.name in this._potentialConstructors)
-        {
-          var body = this._potentialConstructors[parent.name].body;
-          if (body.type != "BlockStatement" || !body.statements)
-            throw "Unexpected body found in function " + parent.name;
-          body.statements.unshift(new Node({
-            type: "IfStatement",
-            cond: new Node({
-              type: "BinaryExpression",
-              precedence: 9,
-              operator: "===",
-              lhs: new MemberExpression("arguments", 0),
-              rhs: new IdentifierExpression(this._extendVarName)
-            }),
-            body: new Node({
-              type: "BlockStatement",
-              statements: [new Node({
-                type: "ReturnStatement"
-              })]
-            })
-          }));
-          delete this._potentialConstructors[parent.name];
         }
 
         let call = new Node({
