@@ -107,10 +107,23 @@ VarStatement.prototype =
   vartype: "var"
 };
 
+function ExpressionStatement(expression)
+{
+  Node.call(this, {
+    expr: expression
+  });
+}
+ExpressionStatement.prototype =
+{
+  __proto__: Node.prototype,
+  type: "ExpressionStatement"
+};
+
 let modifier =
 {
   _tempVarCount: 0,
   _extendFunctionName: null,
+  _exportedSymbols: null,
 
   _shouldRemoveStatement: function(stmt)
   {
@@ -134,7 +147,19 @@ let modifier =
       // Remove export declaration:
       // var EXPORTED_SYMBOLS = [];
       if (stmt.variables[0].name == "EXPORTED_SYMBOLS")
+      {
+        // Store exported symbols for later
+        let array = stmt.variables[0].initializer;
+        if (!array || array.type != "ArrayLiteral")
+          throw "Unexpected: EXPORTED_SYMBOLS isn't initialized with an array literal";
+        for each (let member in array.members)
+        {
+          if (member.type != "LiteralExpression" || member.objtype != "string")
+            throw "Unexpected value in EXPORTED_SYMBOLS array";
+          this._exportedSymbols.push(member.value);
+        }
         return true;
+      }
 
       // Remove base URL assignment:
       // var baseURL = ...;
@@ -168,16 +193,13 @@ let modifier =
       let result = [new VarStatement(tempVar, stmt.expr.rhs)];
       for (let i = 0; i < stmt.expr.lhs.members.length; i++)
       {
-        result.push(new Node({
-          type: "ExpressionStatement",
-          expr: new Node({
-            type: "AssignmentExpression",
-            precedence: 16,
-            operator: "",
-            lhs: stmt.expr.lhs.members[i],
-            rhs: new MemberExpression(tempVar, i)
-          })
-        }));
+        result.push(new ExpressionStatement(new Node({
+          type: "AssignmentExpression",
+          precedence: 16,
+          operator: "",
+          lhs: stmt.expr.lhs.members[i],
+          rhs: new MemberExpression(tempVar, i)
+        })));
       }
       return result;
     }
@@ -262,7 +284,113 @@ let modifier =
 
   visitProgram: function(stmt)
   {
+    this._extendFunctionName = null;
+    this._exportedSymbols = [];
     this._checkStatements(stmt.sourceElements);
+  },
+
+  postvisitProgram: function(stmt)
+  {
+    // Insert _extend44() function declaration at the beginning of the module:
+    // function _extend44(baseClass, props) {
+    //   var dummyConstructor = function() {};
+    //   dummyConstructor.prototype = baseClass.prototype;
+    //   var result = new dummyConstructor();
+    //   for (var k in props)
+    //     result[k] = props[k];
+    //   return result;
+    // }
+    if (this._extendFunctionName != null)
+    {
+      // Would be nice to decompile the source code of the _extend() function
+      // but that isn't supported, have to build the AST for it
+      stmt.sourceElements.unshift(new Node({
+        type: "FunctionDeclaration",
+        precedence: Infinity,
+        name: this._extendFunctionName,
+        arguments: [new IdentifierExpression("baseClass"), new IdentifierExpression("props")],
+        body: new Node({
+          type: "BlockStatement",
+          statements: [
+            new VarStatement("dummyConstructor", new Node({
+              type: "FunctionDeclaration",
+              precedence: Infinity,
+              name: "",
+              arguments: [],
+              body: new Node({type: "EmptyStatement"})
+            })),
+            new ExpressionStatement(new Node({
+              type: "AssignmentExpression",
+              precedence: 16,
+              operator: "",
+              lhs: new MemberExpression("dummyConstructor", "prototype", true),
+              rhs: new MemberExpression("baseClass", "prototype", true)
+            })),
+            new VarStatement("result", new Node({
+              type: "NewExpression",
+              precedence: 1,
+              constructor: new IdentifierExpression("dummyConstructor"),
+              arguments: []
+            })),
+            new Node({
+              type: "ForInStatement",
+              itertype: "for",
+              itervar: new VarStatement("k"),
+              iterrange: new IdentifierExpression("props"),
+              body: new ExpressionStatement(new Node({
+                type: "AssignmentExpression",
+                precedence: 16,
+                operator: "",
+                lhs: new MemberExpression("result", new IdentifierExpression("k")),
+                rhs: new MemberExpression("props", new IdentifierExpression("k")),
+              }))
+            }),
+            new Node({
+              type: "ReturnStatement",
+              expr: new IdentifierExpression("result")
+            })
+          ]
+        })
+      }));
+    }
+
+    // Add exported symbols at the end of the module:
+    // window.exportedSymbol1 = exportedSymbol1;
+    // window.exportedSymbol2 = exportedSymbol2;
+    // window.exportedSymbol3 = exportedSymbol3;
+    if (this._exportedSymbols.length > 0)
+    {
+      for each (let symbol in this._exportedSymbols)
+      {
+        stmt.sourceElements.push(new ExpressionStatement(new Node({
+          type: "AssignmentExpression",
+          precedence: 16,
+          operator: "",
+          lhs: new MemberExpression("window", symbol, true),
+          rhs: new IdentifierExpression(symbol),
+        })));
+      }
+    }
+
+    // Wrap the entire module into a function to give it an independent scope:
+    // (function() {
+    //   ...
+    // })();
+    stmt.sourceElements = [new ExpressionStatement(new Node({
+      type: "CallExpression",
+      precedence: 2,
+      arguments: [],
+      func: new Node({
+        type: "FunctionDeclaration",
+        precedence: Infinity,
+        name: "",
+        arguments: [],
+        body: new Node({
+          type: "BlockStatement",
+          statements: stmt.sourceElements
+        })
+      })
+    }))];
   },
 
   visitVarStatement: function(stmt)
@@ -306,17 +434,7 @@ let modifier =
       if (parent)
       {
         if (this._extendFunctionName == null)
-        {
           this._extendFunctionName = "_extend" + this._tempVarCount++;
-          _print("function " + this._extendFunctionName + "(baseClass, props) {");
-          _print("  var dummyConstructor = function() {};");
-          _print("  dummyConstructor.prototype = baseClass.prototype;");
-          _print("  var result = new dummyConstructor();");
-          _print("  for (var k in props)");
-          _print("    result[k] = props[k];");
-          _print("  return result;");
-          _print("}");
-        }
 
         let call = new Node({
           type: "CallExpression",
@@ -327,14 +445,6 @@ let modifier =
         stmt.rhs = call;
       }
     }
-  },
-
-  _disabled_visitObjectLiteral: function(stmt)
-  {
-    // Drop __proto__ from object initializers
-    for (let i = 0; i < stmt.setters.length; i++)
-      if (stmt.setters[i].type == "PropertyLiteral" && stmt.setters[i].property && decompile(stmt.setters[i].property) == "__proto__")
-        stmt.setters.splice(i--, 1);
   }
 };
 
@@ -364,40 +474,40 @@ function decompile(node)
   return decompileBuffer;
 }
 
-// Output license header
-_print('/* ***** BEGIN LICENSE BLOCK *****');
-_print(' * Version: MPL 1.1');
-_print(' *');
-_print(' * The contents of this file are subject to the Mozilla Public License Version');
-_print(' * 1.1 (the "License"); you may not use this file except in compliance with');
-_print(' * the License. You may obtain a copy of the License at');
-_print(' * http://www.mozilla.org/MPL/');
-_print(' *');
-_print(' * Software distributed under the License is distributed on an "AS IS" basis,');
-_print(' * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License');
-_print(' * for the specific language governing rights and limitations under the');
-_print(' * License.');
-_print(' *');
-_print(' * The Original Code is Adblock Plus.');
-_print(' *');
-_print(' * The Initial Developer of the Original Code is');
-_print(' * Wladimir Palant.');
-_print(' * Portions created by the Initial Developer are Copyright (C) 2006-2010');
-_print(' * the Initial Developer. All Rights Reserved.');
-_print(' *');
-_print(' * Contributor(s):');
-_print(' *');
-_print(' * ***** END LICENSE BLOCK ***** */');
-_print();
-_print('//');
-_print('// This file has been generated automatically from Adblock Plus source code');
-_print('//');
-_print();
-
 process_js = function(ast)
 {
   if (!ast)
     return;
+
+  // Output license header
+  _print('/* ***** BEGIN LICENSE BLOCK *****');
+  _print(' * Version: MPL 1.1');
+  _print(' *');
+  _print(' * The contents of this file are subject to the Mozilla Public License Version');
+  _print(' * 1.1 (the "License"); you may not use this file except in compliance with');
+  _print(' * the License. You may obtain a copy of the License at');
+  _print(' * http://www.mozilla.org/MPL/');
+  _print(' *');
+  _print(' * Software distributed under the License is distributed on an "AS IS" basis,');
+  _print(' * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License');
+  _print(' * for the specific language governing rights and limitations under the');
+  _print(' * License.');
+  _print(' *');
+  _print(' * The Original Code is Adblock Plus.');
+  _print(' *');
+  _print(' * The Initial Developer of the Original Code is');
+  _print(' * Wladimir Palant.');
+  _print(' * Portions created by the Initial Developer are Copyright (C) 2006-2010');
+  _print(' * the Initial Developer. All Rights Reserved.');
+  _print(' *');
+  _print(' * Contributor(s):');
+  _print(' *');
+  _print(' * ***** END LICENSE BLOCK ***** */');
+  _print();
+  _print('//');
+  _print('// This file has been generated automatically from Adblock Plus source code');
+  _print('//');
+  _print();
 
   ast = makeAST(ast);
   walkAST(ast, modifier);
