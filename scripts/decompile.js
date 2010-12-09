@@ -40,6 +40,11 @@ let visitor = {
     this._visitArray(func.arguments, '(', ') ');
     if (func.body.type == "EmptyStatement")
       output("{ }");
+    else if (func.body.type == "ReturnStatement") {
+      output("{").flush().indent();
+      func.body.visit(this);
+      unindent().output("}");
+    }
     else
       func.body.visit(this);
     return true;
