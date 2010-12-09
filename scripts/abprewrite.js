@@ -314,10 +314,16 @@ let modifier =
       let loopVar = stmt.itervar.variables[0].name;
       let loopIndex = "_loopIndex" + this._tempVarCount++;
 
-      if (!stmt.body || !stmt.body.type == "BlockStatement")
-        throw "Unexpected: loop body isn't a block statement";
-      if (!stmt.body.statements)
-        stmt.body.statements = [];
+      if (stmt.body.type != "BlockStatement")
+      {
+        let oldBody = stmt.body;
+        stmt.body = new Node({
+          type: "BlockStatement",
+          statements: []
+        });
+        if (oldBody)
+          stmt.body.statements.push(oldBody);
+      }
       stmt.body.statements.unshift(new VarStatement(loopVar, new MemberExpression(stmt.iterrange, new IdentifierExpression(loopIndex))));
 
       return [new Node({
