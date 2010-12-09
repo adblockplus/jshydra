@@ -74,6 +74,92 @@ MemberExpression.prototype =
   precedence: 1
 };
 
+function UnaryExpression(operator, operand)
+{
+  var operators = {
+    __proto__: null,
+    "yield": 4,
+    "+": 4,
+    "-": 4,
+    "!": 4,
+    "~": 4,
+    "typeof": 4,
+    "void": 4,
+    "delete": 4,
+    "++": 3,
+    "--": 3,
+    "()": 2
+  };
+
+  if (!(operator in operators))
+    throw "Unknown operator";
+
+  if (typeof operand != "object")
+    operand = new LiteralExpression(operand);
+
+  Node.call(this, {
+    operator: operator,
+    precedence: operators[operator],
+    operand: operand
+  });
+}
+UnaryExpression.prototype =
+{
+  __proto__: Node.prototype,
+  type: "UnaryExpression"
+};
+
+function BinaryExpression(operator, lhs, rhs)
+{
+  var operators = {
+    __proto__: null,
+    ",": 17,
+    "||": 14,
+    "&&": 13,
+    "|": 12,
+    "^": 11,
+    "&": 10,
+    "==": 9,
+    "!=": 9,
+    "===": 9,
+    "!==": 9,
+    "<": 8,
+    "<=": 8,
+    ">": 8,
+    ">=": 8,
+    "in": 8,
+    "instanceof": 8,
+    "<<": 7,
+    ">>": 7,
+    ">>>": 7,
+    "+": 6,
+    "-": 6,
+    "*": 5,
+    "/": 5,
+    "%": 5
+  };
+
+  if (!(operator in operators))
+    throw "Unknown operator";
+
+  if (typeof lhs != "object")
+    lhs = new LiteralExpression(lhs);
+  if (typeof rhs != "object")
+    rhs = new LiteralExpression(rhs);
+
+  Node.call(this, {
+    operator: operator,
+    precedence: operators[operator],
+    lhs: lhs,
+    rhs: rhs
+  });
+}
+BinaryExpression.prototype =
+{
+  __proto__: Node.prototype,
+  type: "BinaryExpression"
+};
+
 function VarDeclaration(varname, initializer)
 {
   obj = {
@@ -121,6 +207,7 @@ ExpressionStatement.prototype =
 
 let modifier =
 {
+  _filename: null,
   _tempVarCount: 0,
   _extendFunctionName: null,
   _exportedSymbols: null,
@@ -236,19 +323,8 @@ let modifier =
       return [new Node({
         type: "ForStatement",
         init: new VarStatement(loopIndex, 0),
-        cond: new Node({
-          type: "BinaryExpression",
-          precedence: 8,
-          operator: "<",
-          lhs: new IdentifierExpression(loopIndex),
-          rhs: new MemberExpression(stmt.iterrange, "length", true)
-        }),
-        inc: new Node({
-          type: "UnaryExpression",
-          precedence: 3,
-          operator: "++",
-          operand: new IdentifierExpression(loopIndex)
-        }),
+        cond: new BinaryExpression("<", new IdentifierExpression(loopIndex), new MemberExpression(stmt.iterrange, "length", true)),
+        inc: new UnaryExpression("++", new IdentifierExpression(loopIndex)),
         body: stmt.body
       })];
     }
@@ -354,6 +430,26 @@ let modifier =
       }));
     }
 
+    // Add patch function call at the end of the module:
+    // if (typeof _patchFunc44 != "undefined")
+    //   (eval("(" + _patchFunc44.toString()) + ")()");
+    let patchFuncName = "_patchFunc" + this._tempVarCount++;
+    stmt.sourceElements.push(new Node({
+      type: "IfStatement",
+      cond: new BinaryExpression("!=", new UnaryExpression("typeof", new IdentifierExpression(patchFuncName)), "undefined"),
+      body: new ExpressionStatement(new Node({
+        type: "CallExpression",
+        precedence: 2,
+        func: new IdentifierExpression("eval"),
+        arguments: [new BinaryExpression("+", new BinaryExpression("+", "(", new Node({
+          type: "CallExpression",
+          precedence: 2,
+          arguments: [],
+          func: new MemberExpression(patchFuncName, "toString", true),
+        })), ")()")],
+      }))
+    }));
+
     // Add exported symbols at the end of the module:
     // window.exportedSymbol1 = exportedSymbol1;
     // window.exportedSymbol2 = exportedSymbol2;
@@ -373,18 +469,18 @@ let modifier =
     }
 
     // Wrap the entire module into a function to give it an independent scope:
-    // (function() {
+    // (function(_patchFunc44) {
     //   ...
-    // })();
+    // })(window.ModuleNamePatch);
     stmt.sourceElements = [new ExpressionStatement(new Node({
       type: "CallExpression",
       precedence: 2,
-      arguments: [],
+      arguments: [new MemberExpression("window", this._filename + "Patch", true)],
       func: new Node({
         type: "FunctionDeclaration",
         precedence: Infinity,
         name: "",
-        arguments: [],
+        arguments: [new IdentifierExpression(patchFuncName)],
         body: new Node({
           type: "BlockStatement",
           statements: stmt.sourceElements
@@ -474,10 +570,14 @@ function decompile(node)
   return decompileBuffer;
 }
 
-process_js = function(ast)
+process_js = function(ast, filename)
 {
   if (!ast)
     return;
+
+  filename = filename.replace(/.*[\\\/]/, "");
+  filename = filename.replace(/\.jsm?$/, "");
+  modifier._filename = filename;
 
   // Output license header
   _print('/* ***** BEGIN LICENSE BLOCK *****');
