@@ -9,13 +9,11 @@ MODULE := js
 include $(MOZ_OBJDIR)/js/src/config/autoconf.mk
 include $(MOZ_SRCDIR)/js/src/config/config.mk
 
-LINK := -L$(MOZ_OBJDIR)/dist/lib -lnspr4 -lm
-
 jshydra$(BIN_SUFFIX): jshydra.$(OBJ_SUFFIX) jshydra_funcs.$(OBJ_SUFFIX) jshydra_bridge.$(OBJ_SUFFIX) $(MOZ_OBJDIR)/js/src/$(LIB_PREFIX)js_static.$(LIB_SUFFIX)
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(LD) -nologo -out:$@ $^ $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
-	g++ -o $@ $^ $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
+	g++ -o $@ $^ $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS) -lnspr4
 endif
 
 .deps:
