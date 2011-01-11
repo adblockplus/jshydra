@@ -13,6 +13,8 @@
 
 using namespace js;
 
+bool useReflect = false;
+
 void setIntProperty(JSObject *obj, const char *name, int value) {
     jshydra_defineProperty(cx, obj, name, INT_TO_JSVAL(value));
 }
@@ -161,27 +163,36 @@ JSObject *makeNode(JSParseNode *node) {
 bool parseFile(FILE *file, char *filename, char *argstr) {
     js::Compiler compiler(cx, NULL, NULL);
     // Read in the file into a buffer
-        struct stat st;
-        int ok = fstat(fileno(file), &st);
-        if (ok != 0)
-            return false;
-        jschar *buf = (jschar*)malloc(st.st_size * sizeof(jschar));
-        int i = 0, c;
-        while ((c = getc(file)) != EOF)
-            buf[i++] = (jschar)(unsigned char)c;
-        if (!compiler.init(buf, st.st_size, filename, 1))
-            return false;
-    JSParseNode *root = compiler.parser.parse(globalObj);
-	free(buf);
-    JSObject *ast = makeNode(root);
-    jshydra_rootObject(cx, ast);
+    struct stat st;
+    int ok = fstat(fileno(file), &st);
+    if (ok != 0)
+        return false;
+    jschar *buf = (jschar*)malloc(st.st_size * sizeof(jschar));
+    int i = 0, c;
+    while ((c = getc(file)) != EOF)
+        buf[i++] = (jschar)(unsigned char)c;
+    if (!compiler.init(buf, st.st_size, filename, 1))
+        return false;
+    jsval rval, argv[3];
+    if (useReflect) {
+        JS_GetProperty(cx, globalObj, "Reflect", &rval);
+        JSObject *reflect = JSVAL_TO_OBJECT(rval);
+        JSString *str = JS_NewUCStringCopyN(cx, buf, st.st_size);
+        argv[0] = STRING_TO_JSVAL(str);
+        JS_CallFunctionName(cx, reflect, "parse", 1, argv, &rval);
+        argv[0] = rval;
+    } else {
+        JSParseNode *root = compiler.parser.parse(globalObj);
+        JSObject *ast = makeNode(root);
+        argv[0] = OBJECT_TO_JSVAL(ast);
+        jshydra_rootObject(cx, ast);
+    }
+    free(buf);
     jsval func = jshydra_getToplevelFunction(cx, "process_js");
     if (JS_TypeOfValue(cx, func) != JSTYPE_FUNCTION) {
         fprintf(stderr, "No function process_js!\n");
         return false;
     }
-    jsval rval, argv[3];
-    argv[0] = OBJECT_TO_JSVAL(ast);
     JSString *newfname = JS_NewStringCopyZ(cx, filename);
     argv[1] = STRING_TO_JSVAL(newfname);
     JSString *jsArgStr = JS_NewStringCopyZ(cx, argstr);
@@ -200,7 +211,7 @@ int main(int argc, char **argv) {
     argv++;
     char *argstr = NULL;
 
-  bool failure = false;
+    bool failure = false;
     do {
         argc--;
         argv++;
@@ -209,6 +220,9 @@ int main(int argc, char **argv) {
             argv++;
             argstr = argv[0];
             continue;
+        } else if(!strcmp(argv[0], "--trueast")) {
+            useReflect = true;
+            continue;
         }
         FILE *input = fopen(argv[0], "r");
         if (!input) {
@@ -216,8 +230,8 @@ int main(int argc, char **argv) {
             continue;
         }
         failure |= !parseFile(input, argv[0], argstr);
-    if (failure)
-      fprintf(stderr, "Failure happened on input %s\n", argv[0]);
+        if (failure)
+            fprintf(stderr, "Failure happened on input %s\n", argv[0]);
     } while (argc > 1);
 
     return !!failure;

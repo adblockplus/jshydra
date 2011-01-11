@@ -52,6 +52,6 @@ full-check:: jshydra$(BIN_SUFFIX)
 	set -e; \
 	for f in $$(find jstest -name '*.js'); do \
 		echo $$f; \
-		./jshydra$(BIN_SUFFIX) scripts/decompile.js "$(MOZ_SRCDIR)/js/src/tests$${f#jstest}" >$$f; \
+		./jshydra$(BIN_SUFFIX) scripts/astDecompile.js --trueast "$(MOZ_SRCDIR)/js/src/tests$${f#jstest}" >$$f; \
 	done
 	#python jstest/jstests.py --tinderbox fake_js.sh
