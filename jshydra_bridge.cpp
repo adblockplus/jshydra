@@ -31,6 +31,14 @@ JSObject *globalObj;
 
 JSObject *rootArray;
 
+static JSClass global_class = {
+    "global", JSCLASS_GLOBAL_FLAGS,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
+
+};
+
 static char *my_dirname (char *path);
 
 JSClass js_node_class = {
@@ -43,13 +51,13 @@ JSClass js_node_class = {
 
 void jshydra_init(const char *file) {
   static JSFunctionSpec shell_functions[] = {
-    {"_print",          Print,          0},
-    {"include",         Include,        1},
-    {"write_file",      WriteFile,      1},
-    {"read_file",       ReadFile,       1},
-    {"diagnostic",      Diagnostic,     0},
-    {"require",         Require,        1},
-    {"hashcode",        Hashcode,       1},
+    JS_FN("_print",          Print,          0,     0),
+    JS_FN("include",         Include,        1,     0),
+    JS_FN("write_file",      WriteFile,      1,     0),
+    JS_FN("read_file",       ReadFile,       1,     0),
+    JS_FN("diagnostic",      Diagnostic,     0,     0),
+    JS_FN("require",         Require,        1,     0),
+    JS_FN("hashcode",        Hashcode,       1,     0),
     {0}
   };
 
@@ -61,7 +69,8 @@ void jshydra_init(const char *file) {
 
   //JS_SetContextPrivate (this->cx, this);
   
-  globalObj = JS_NewObject (cx, NULL, 0, 0);
+  globalObj = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
+  JS_EnterCrossCompartmentCall(cx, globalObj);
   JS_InitStandardClasses (cx, globalObj);
   /* register error handler */
   JS_SetErrorReporter (cx, ErrorReporter);
@@ -117,7 +126,7 @@ void jshydra_init(const char *file) {
 	  jshydra_defineProperty(cx, globalObj, *name++, INT_TO_JSVAL(index++));
 
   rootArray = JS_NewArrayObject(cx, 0, NULL);
-  JS_AddRoot(cx, &rootArray);
+  JS_AddObjectRoot(cx, &rootArray);
   jshydra_rootObject(cx, globalObj);
 }
 
@@ -131,7 +140,8 @@ int jshydra_includeScript (JSContext *cx, const char *script) {
   if (!JS_EnterLocalRootScope(cx))
 	  return -1;
   jsval rval;
-  int ret = !Include (cx, globalObj, 1, &strval, &rval);
+
+  int ret = !JS_CallFunctionName(cx, globalObj, "include", 1, &strval, &rval);
   JS_LeaveLocalRootScope(cx);
   return ret;
 }
@@ -186,12 +196,13 @@ FILE *jshydra_searchPath (JSContext *cx, const char *filename, char **realname)
 
       JSString *dir_str = JS_ValueToString(cx, val);
       if (!dir_str) continue;
-      char *dir = JS_GetStringBytes(dir_str);
+      char *dir = JS_EncodeString(cx, dir_str);
 
       char *buf = static_cast<char *>(malloc(strlen(dir) + strlen(filename) + 2));
       /* Doing a little extra work here to get rid of unneeded '/'. */
       const char *sep = dir[strlen(dir)-1] == '/' ? "" : "/";
       sprintf(buf, "%s%s%s", dir, sep, filename);
+	  JS_free(cx, dir);
       FILE *f = fopen(buf, "r");
       if (f) {
         *realname = buf;
@@ -280,7 +291,7 @@ JSObject *jshydra_getRegexPrototype(JSContext *cx) {
   static JSObject *proto = NULL;
   if (proto == NULL) {
     char str[1];
-    JSObject *regex = JS_NewRegExpObject(cx, str, 0, 0);
+    JSObject *regex = JS_NewRegExpObjectNoStatics(cx, str, 0, 0);
     proto = JS_GetPrototype(cx, regex);
   }
   return proto;
