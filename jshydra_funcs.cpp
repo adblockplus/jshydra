@@ -429,6 +429,7 @@ ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     JS_GetProperty(cx, JSVAL_TO_OBJECT (exn), "stack", &stack);
     if (JS_TypeOfValue (cx, stack) == JSTYPE_STRING) {
       char *str = JS_EncodeString(cx, JSVAL_TO_STRING (stack));
+	  char *save_str = str;
       int counter = 0;
       do {
         char *eol = strchr (str, '\n');
@@ -447,7 +448,7 @@ ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
           break;
         }
       } while (*str);
-      JS_free(cx, str);
+      JS_free(cx, save_str);
     }
   }
   fflush(stderr);

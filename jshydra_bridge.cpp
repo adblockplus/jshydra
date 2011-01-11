@@ -49,6 +49,8 @@ JSClass js_node_class = {
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
+extern JSObject *js_InitReflectClass(JSContext *cx, JSObject *obj);
+
 void jshydra_init(const char *file) {
   static JSFunctionSpec shell_functions[] = {
     JS_FN("_print",          Print,          0,     0),
@@ -72,6 +74,7 @@ void jshydra_init(const char *file) {
   globalObj = JS_NewCompartmentAndGlobalObject(cx, &global_class, NULL);
   JS_EnterCrossCompartmentCall(cx, globalObj);
   JS_InitStandardClasses (cx, globalObj);
+  js_InitReflectClass(cx, globalObj);
   /* register error handler */
   JS_SetErrorReporter (cx, ErrorReporter);
   xassert (JS_DefineFunctions (cx, globalObj, shell_functions));
