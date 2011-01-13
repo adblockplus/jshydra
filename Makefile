@@ -47,11 +47,14 @@ echo-variable-%:
 	@echo "$($*)"
 
 full-check:: jshydra$(BIN_SUFFIX)
-	@cp -R $(MOZ_SRCDIR)/js/src/tests jstest
+	@cp -R $(srcdir)/tests jstest
+	@cp check.py jstest
 	@echo "Decompiling JS ASTs.."
-	set -e; \
-	for f in $$(find jstest -name '*.js'); do \
+	@set -e; \
+	for f in $$(cd jstest && python check.py | grep -v '^warning:'); do \
 		echo $$f; \
-		./jshydra$(BIN_SUFFIX) scripts/astDecompile.js --trueast "$(MOZ_SRCDIR)/js/src/tests$${f#jstest}" >$$f; \
+		./jshydra$(BIN_SUFFIX) scripts/astDecompile.js --trueast "$(srcdir)/tests/$$f" >jstest/$$f; \
 	done
-	#python jstest/jstests.py --tinderbox fake_js.sh
+	python $(srcdir)/tests/jstest.py --tinderbox $(objdir)/js > before.log
+	python jstest/jstests.py --tinderbox $(objdir)/js > after.log
+	diff before.log after.log
