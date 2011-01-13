@@ -55,6 +55,6 @@ full-check:: jshydra$(BIN_SUFFIX)
 		echo $$f; \
 		./jshydra$(BIN_SUFFIX) scripts/astDecompile.js --trueast "$(srcdir)/tests/$$f" >jstest/$$f; \
 	done
-	python $(srcdir)/tests/jstest.py --tinderbox $(objdir)/js > before.log
-	python jstest/jstests.py --tinderbox $(objdir)/js > after.log
+	python $(srcdir)/tests/jstests.py --tinderbox $(MOZ_OBJDIR)/js/src/js > before.log
+	python jstest/jstests.py --tinderbox $(MOZ_OBJDIR)/js/src/js > after.log
 	diff before.log after.log
