@@ -603,7 +603,7 @@ process_js = function(ast, filename)
   _print(' *');
   _print(' * The Initial Developer of the Original Code is');
   _print(' * Wladimir Palant.');
-  _print(' * Portions created by the Initial Developer are Copyright (C) 2006-2010');
+  _print(' * Portions created by the Initial Developer are Copyright (C) 2006-2011');
   _print(' * the Initial Developer. All Rights Reserved.');
   _print(' *');
   _print(' * Contributor(s):');
