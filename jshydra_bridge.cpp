@@ -33,7 +33,7 @@ JSObject *rootArray;
 
 static JSClass global_class = {
     "global", JSCLASS_GLOBAL_FLAGS,
-    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+    JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
     JSCLASS_NO_OPTIONAL_MEMBERS
 
@@ -44,7 +44,7 @@ static char *my_dirname (char *path);
 JSClass js_node_class = {
   "JSHydraNode",  /* name */
   JSCLASS_CONSTRUCT_PROTOTYPE, /* flags */
-  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
+  JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
   JS_EnumerateStub,JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };

@@ -11,6 +11,10 @@
 
 #include "jshydra_bridge.h"
 
+#ifndef ATOM_TO_JSVAL
+#define ATOM_TO_JSVAL(atom) IdToJsval(ATOM_TO_JSID(atom))
+#endif
+
 using namespace js;
 
 bool useReflect = false;
@@ -171,7 +175,7 @@ bool parseFile(FILE *file, char *filename, char *argstr) {
     int i = 0, c;
     while ((c = getc(file)) != EOF)
         buf[i++] = (jschar)(unsigned char)c;
-    if (!compiler.init(buf, st.st_size, filename, 1))
+    if (!compiler.init(buf, st.st_size, filename, 1, JSVERSION_LATEST))
         return false;
     jsval rval, argv[3];
     if (useReflect) {

@@ -47,7 +47,8 @@ echo-variable-%:
 	@echo "$($*)"
 
 full-check:: jshydra$(BIN_SUFFIX)
-	@cp -R $(srcdir)/tests jstest
+	@mkdir -p jstest
+	@cp -R $(srcdir)/tests/* jstest
 	@cp check.py jstest
 	@echo "Decompiling JS ASTs.."
 	@set -e; \

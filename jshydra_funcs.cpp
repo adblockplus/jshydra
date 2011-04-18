@@ -145,7 +145,7 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
     return JS_FALSE;
   }
 
-  JSScript *script = JS_CompileScript(cx, ns,
+  JSObject *script = JS_CompileScript(cx, ns,
                                       content, size, realname, 1);
   free(realname);
   if (script == NULL) {
@@ -153,11 +153,10 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
     return JS_FALSE;
   }
 
-  JSObject *sobj = JS_NewScriptObject(cx, script);
-  JS_AddNamedObjectRoot(cx, &sobj, filename);
+  JS_AddNamedObjectRoot(cx, &script, filename);
   jsval rval;
   JSBool rv = JS_ExecuteScript(cx, ns, script, &rval);
-  JS_RemoveObjectRoot(cx, &sobj);
+  JS_RemoveObjectRoot(cx, &script);
   if (!rv) {
     xassert(JS_IsExceptionPending(cx));
     return JS_FALSE;
