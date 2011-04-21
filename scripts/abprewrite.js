@@ -298,6 +298,10 @@ let modifier =
       // {
       //   ...
       // }
+      // for each (var [foo, bar] in fooList)
+      // {
+      //   ...
+      // }
       //
       // Change into:
       // for (var _loopIndex44 = 0; _loopIndex44 < fooList.length; _loopIndex44++)
@@ -305,13 +309,18 @@ let modifier =
       //   var foo = fooList[_loopIndex44];
       //   ...
       // }
+      // for (var _loopIndex55 = 0; _loopIndex55 < fooList.length; _loopIndex44++)
+      // {
+      //   var foo = fooList[_loopIndex55][0];
+      //   var bar = fooList[_loopIndex55][1];
+      //   ...
+      // }
       if (!stmt.itervar || stmt.itervar.type != "VarStatement" || !stmt.itervar.variables ||
-          stmt.itervar.variables.length != 1 || stmt.itervar.variables[0].type != "VarDeclaration" ||
-          !stmt.itervar.variables[0].name)
+          stmt.itervar.variables.length != 1)
       {
-        throw "Unexpected loop variable in for each loop";
+        throw "Loop variable isn't a variable statement?";
       }
-      let loopVar = stmt.itervar.variables[0].name;
+      let loopVar = stmt.itervar.variables[0];
       let loopIndex = "_loopIndex" + this._tempVarCount++;
 
       if (stmt.body.type != "BlockStatement")
@@ -324,7 +333,22 @@ let modifier =
         if (oldBody)
           stmt.body.statements.push(oldBody);
       }
-      stmt.body.statements.unshift(new VarStatement(loopVar, new MemberExpression(stmt.iterrange, new IdentifierExpression(loopIndex))));
+
+      if (loopVar.type == "VarDeclaration" && loopVar.name)
+      {
+        stmt.body.statements.unshift(new VarStatement(loopVar.name, new MemberExpression(stmt.iterrange, new IdentifierExpression(loopIndex))));
+      }
+      else if (loopVar.type == "ArrayLiteral")
+      {
+        for (let i = 0; i < loopVar.members.length; i++)
+        {
+          if (loopVar.members[i].type != "IdentifierExpression")
+            throw "Expected member of destructuring assignment in loop variable";
+          stmt.body.statements.splice(i, 0, new VarStatement(loopVar.members[i].name, new MemberExpression(new MemberExpression(stmt.iterrange, new IdentifierExpression(loopIndex)), i)));
+        }
+      }
+      else
+        throw "Unexpected loop variable in for each statement";
 
       return [new Node({
         type: "ForStatement",
