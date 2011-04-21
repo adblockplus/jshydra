@@ -547,7 +547,8 @@ function convertTOK_VAR(pn) {
   for each (let x in ast.variables) {
     if (x.type == "LetStatement")
       return x;
-    x.type = "VarDeclaration";
+    if (x.type == "IdentifierExpression")
+      x.type = "VarDeclaration";
   }
   return ast;
 }
