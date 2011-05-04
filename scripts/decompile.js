@@ -26,9 +26,19 @@ let visitor = {
       unindent();
     }
   },
-  _visitNeedBlock: function (stmt) {
-    if (stmt.type == "EmptyStatement")
-      output("{}").flush();
+  _visitNeedBlock: function (stmt, noFlush) {
+    if (stmt.type == "EmptyStatement") {
+      output("{}")
+      if (!noFlush)
+        flush();
+    }
+    else if (stmt.type == "ReturnStatement") {
+      output("{").flush().indent();
+      stmt.visit(this);
+      unindent().output("}");
+      if (!noFlush)
+        flush();
+    }
     else
       stmt.visit(this);
   },
@@ -38,15 +48,7 @@ let visitor = {
     if (func.name)
       output(func.name);
     this._visitArray(func.arguments, '(', ') ');
-    if (func.body.type == "EmptyStatement")
-      output("{ }");
-    else if (func.body.type == "ReturnStatement") {
-      output("{").flush().indent();
-      func.body.visit(this);
-      unindent().output("}");
-    }
-    else
-      func.body.visit(this);
+    this._visitNeedBlock(func.body, true);
     return true;
   },
   visitParameter: function (p) {
@@ -279,7 +281,7 @@ let visitor = {
         output(" ").output(prop.value.name);
       }
       this._visitArray(prop.value.arguments, '(', ') ');
-      this._visitNeedBlock(prop.value.body);
+      this._visitNeedBlock(prop.value.body, true);
       return true;
     }
     prop.property.visit(this);
