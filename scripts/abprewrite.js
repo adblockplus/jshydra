@@ -460,63 +460,66 @@ let modifier =
       }));
     }
 
-    // Add patch function call at the end of the module:
-    // if (typeof _patchFunc44 != "undefined")
-    //   (eval("(" + _patchFunc44.toString()) + ")()");
-    let patchFuncName = "_patchFunc" + this._tempVarCount++;
-    stmt.sourceElements.push(new Node({
-      type: "IfStatement",
-      cond: new BinaryExpression("!=", new UnaryExpression("typeof", new IdentifierExpression(patchFuncName)), "undefined"),
-      body: new ExpressionStatement(new Node({
-        type: "CallExpression",
-        precedence: 2,
-        func: new IdentifierExpression("eval"),
-        arguments: [new BinaryExpression("+", new BinaryExpression("+", "(", new Node({
+    if (typeof isModule == "boolean" && isModule)
+    {
+      // Add patch function call at the end of the module:
+      // if (typeof _patchFunc44 != "undefined")
+      //   (eval("(" + _patchFunc44.toString()) + ")()");
+      let patchFuncName = "_patchFunc" + this._tempVarCount++;
+      stmt.sourceElements.push(new Node({
+        type: "IfStatement",
+        cond: new BinaryExpression("!=", new UnaryExpression("typeof", new IdentifierExpression(patchFuncName)), "undefined"),
+        body: new ExpressionStatement(new Node({
           type: "CallExpression",
           precedence: 2,
-          arguments: [],
-          func: new MemberExpression(patchFuncName, "toString", true),
-        })), ")()")],
-      }))
-    }));
+          func: new IdentifierExpression("eval"),
+          arguments: [new BinaryExpression("+", new BinaryExpression("+", "(", new Node({
+            type: "CallExpression",
+            precedence: 2,
+            arguments: [],
+            func: new MemberExpression(patchFuncName, "toString", true),
+          })), ")()")],
+        }))
+      }));
 
-    // Add exported symbols at the end of the module:
-    // window.exportedSymbol1 = exportedSymbol1;
-    // window.exportedSymbol2 = exportedSymbol2;
-    // window.exportedSymbol3 = exportedSymbol3;
-    if (this._exportedSymbols.length > 0)
-    {
-      for each (let symbol in this._exportedSymbols)
+      // Add exported symbols at the end of the module:
+      // window.exportedSymbol1 = exportedSymbol1;
+      // window.exportedSymbol2 = exportedSymbol2;
+      // window.exportedSymbol3 = exportedSymbol3;
+      if (this._exportedSymbols.length > 0)
       {
-        stmt.sourceElements.push(new ExpressionStatement(new Node({
-          type: "AssignmentExpression",
-          precedence: 16,
-          operator: "",
-          lhs: new MemberExpression("window", symbol, true),
-          rhs: new IdentifierExpression(symbol),
-        })));
+        for each (let symbol in this._exportedSymbols)
+        {
+          stmt.sourceElements.push(new ExpressionStatement(new Node({
+            type: "AssignmentExpression",
+            precedence: 16,
+            operator: "",
+            lhs: new MemberExpression("window", symbol, true),
+            rhs: new IdentifierExpression(symbol),
+          })));
+        }
       }
-    }
 
-    // Wrap the entire module into a function to give it an independent scope:
-    // (function(_patchFunc44) {
-    //   ...
-    // })(window.ModuleNamePatch);
-    stmt.sourceElements = [new ExpressionStatement(new Node({
-      type: "CallExpression",
-      precedence: 2,
-      arguments: [new MemberExpression("window", this._filename + "Patch", true)],
-      func: new Node({
-        type: "FunctionDeclaration",
-        precedence: Infinity,
-        name: "",
-        arguments: [new IdentifierExpression(patchFuncName)],
-        body: new Node({
-          type: "BlockStatement",
-          statements: stmt.sourceElements
+      // Wrap the entire module into a function to give it an independent scope:
+      // (function(_patchFunc44) {
+      //   ...
+      // })(window.ModuleNamePatch);
+      stmt.sourceElements = [new ExpressionStatement(new Node({
+        type: "CallExpression",
+        precedence: 2,
+        arguments: [new MemberExpression("window", this._filename + "Patch", true)],
+        func: new Node({
+          type: "FunctionDeclaration",
+          precedence: Infinity,
+          name: "",
+          arguments: [new IdentifierExpression(patchFuncName)],
+          body: new Node({
+            type: "BlockStatement",
+            statements: stmt.sourceElements
+          })
         })
-      })
-    }))];
+      }))];
+    }
   },
 
   visitVarStatement: function(stmt)
