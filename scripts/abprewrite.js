@@ -209,7 +209,6 @@ let modifier =
 {
   _filename: null,
   _tempVarCount: 0,
-  _extendFunctionName: null,
   _exportedSymbols: null,
 
   _shouldRemoveStatement: function(stmt)
@@ -390,76 +389,12 @@ let modifier =
 
   visitProgram: function(stmt)
   {
-    this._extendFunctionName = null;
     this._exportedSymbols = [];
     this._checkStatements(stmt.sourceElements);
   },
 
   postvisitProgram: function(stmt)
   {
-    // Insert _extend44() function declaration at the beginning of the module:
-    // function _extend44(baseClass, props) {
-    //   var dummyConstructor = function() {};
-    //   dummyConstructor.prototype = baseClass.prototype;
-    //   var result = new dummyConstructor();
-    //   for (var k in props)
-    //     result[k] = props[k];
-    //   return result;
-    // }
-    if (this._extendFunctionName != null)
-    {
-      // Would be nice to decompile the source code of the _extend() function
-      // but that isn't supported, have to build the AST for it
-      stmt.sourceElements.unshift(new Node({
-        type: "FunctionDeclaration",
-        precedence: Infinity,
-        name: this._extendFunctionName,
-        arguments: [new IdentifierExpression("baseClass"), new IdentifierExpression("props")],
-        body: new Node({
-          type: "BlockStatement",
-          statements: [
-            new VarStatement("dummyConstructor", new Node({
-              type: "FunctionDeclaration",
-              precedence: Infinity,
-              name: "",
-              arguments: [],
-              body: new Node({type: "EmptyStatement"})
-            })),
-            new ExpressionStatement(new Node({
-              type: "AssignmentExpression",
-              precedence: 16,
-              operator: "",
-              lhs: new MemberExpression("dummyConstructor", "prototype", true),
-              rhs: new MemberExpression("baseClass", "prototype", true)
-            })),
-            new VarStatement("result", new Node({
-              type: "NewExpression",
-              precedence: 1,
-              constructor: new IdentifierExpression("dummyConstructor"),
-              arguments: []
-            })),
-            new Node({
-              type: "ForInStatement",
-              itertype: "for",
-              itervar: new VarStatement("k"),
-              iterrange: new IdentifierExpression("props"),
-              body: new ExpressionStatement(new Node({
-                type: "AssignmentExpression",
-                precedence: 16,
-                operator: "",
-                lhs: new MemberExpression("result", new IdentifierExpression("k")),
-                rhs: new MemberExpression("props", new IdentifierExpression("k")),
-              }))
-            }),
-            new Node({
-              type: "ReturnStatement",
-              expr: new IdentifierExpression("result")
-            })
-          ]
-        })
-      }));
-    }
-
     if (typeof isModule == "boolean" && isModule)
     {
       // Add patch function call at the end of the module:
@@ -527,53 +462,6 @@ let modifier =
     // Change let variables into "regular" variables
     if (stmt.vartype == "let")
       stmt.vartype = "var";
-  },
-
-  visitAssignmentExpression: function(stmt)
-  {
-    if (stmt.rhs && stmt.rhs.type == "ObjectLiteral" && stmt.rhs.setters)
-    {
-      // Convert prototype chains:
-      // Foo.prototype = {
-      //   __proto__: Bar.prototype,
-      //   ...
-      // };
-      //
-      // Change into:
-      // Foo.prototype = _extend44(Bar, {
-      //   ...
-      // });
-      //
-      // Any __proto__ entries not pointing to a function (__proto__: null) are
-      // removed.
-      let parent = null;
-      for (let i = 0; i < stmt.rhs.setters.length; i++)
-      {
-        let setter = stmt.rhs.setters[i];
-        if (setter.type == "PropertyLiteral" && setter.property && setter.property.type == "IdentifierExpression" && setter.property.name == "__proto__")
-        {
-          stmt.rhs.setters.splice(i--, 1);
-          if (setter.value && setter.value.type == "MemberExpression" && setter.value.constmember == "prototype" &&
-              setter.value.container && setter.value.container.type == "IdentifierExpression")
-          {
-            parent = setter.value.container;
-          }
-        }
-      }
-      if (parent)
-      {
-        if (this._extendFunctionName == null)
-          this._extendFunctionName = "_extend" + this._tempVarCount++;
-
-        let call = new Node({
-          type: "CallExpression",
-          precedence: 2,
-          func: new IdentifierExpression(this._extendFunctionName),
-          arguments: [parent, stmt.rhs]
-        });
-        stmt.rhs = call;
-      }
-    }
   }
 };
 
