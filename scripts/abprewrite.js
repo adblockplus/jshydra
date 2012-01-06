@@ -501,29 +501,11 @@ process_js = function(ast, filename)
   modifier._filename = filename;
 
   // Output license header
-  _print('/* ***** BEGIN LICENSE BLOCK *****');
-  _print(' * Version: MPL 1.1');
-  _print(' *');
-  _print(' * The contents of this file are subject to the Mozilla Public License Version');
-  _print(' * 1.1 (the "License"); you may not use this file except in compliance with');
-  _print(' * the License. You may obtain a copy of the License at');
-  _print(' * http://www.mozilla.org/MPL/');
-  _print(' *');
-  _print(' * Software distributed under the License is distributed on an "AS IS" basis,');
-  _print(' * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License');
-  _print(' * for the specific language governing rights and limitations under the');
-  _print(' * License.');
-  _print(' *');
-  _print(' * The Original Code is Adblock Plus.');
-  _print(' *');
-  _print(' * The Initial Developer of the Original Code is');
-  _print(' * Wladimir Palant.');
-  _print(' * Portions created by the Initial Developer are Copyright (C) 2006-2011');
-  _print(' * the Initial Developer. All Rights Reserved.');
-  _print(' *');
-  _print(' * Contributor(s):');
-  _print(' *');
-  _print(' * ***** END LICENSE BLOCK ***** */');
+  _print('/*');
+  _print(' * This Source Code is subject to the terms of the Mozilla Public License');
+  _print(' * version 2.0 (the "License"). You can obtain a copy of the License at');
+  _print(' * http://mozilla.org/MPL/2.0/.');
+  _print(' */');
   _print();
   _print('//');
   _print('// This file has been generated automatically from Adblock Plus source code');
