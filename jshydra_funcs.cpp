@@ -12,7 +12,7 @@
 JSBool require_version(JSContext *cx, jsval val) {
   JSString *version_str = JS_ValueToString(cx, val);
   if (!version_str) return JS_FALSE;
-  char *version_cstr = JS_GetStringBytes(version_str);
+  char *version_cstr = JS_EncodeString(cx, version_str);
   JSVersion version = JS_StringToVersion(version_cstr);
   JSBool retval;
   if (version == JSVERSION_UNKNOWN) {
@@ -22,6 +22,7 @@ JSBool require_version(JSContext *cx, jsval val) {
     JS_SetVersion(cx, version);
     retval = JS_TRUE;
   }
+  JS_free(cx, version_cstr);
   return retval;
 }
 
@@ -75,11 +76,10 @@ jsval get_version(JSContext *cx)
   return STRING_TO_JSVAL(version_str);
 }
 
-JSBool Require(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-               jsval *rval)
+JSBool Require(JSContext *cx, uintN argc, jsval *vp)
 {
   JSObject *args;
-  if (!JS_ConvertArguments(cx, argc, argv, "o", &args)) return JS_FALSE;
+  if (!JS_ConvertArguments(cx, argc, JS_ARGV(cx, vp), "o", &args)) return JS_FALSE;
   JSIdArray *prop_ids = JS_Enumerate(cx, args);
   if (!prop_ids) return JS_FALSE;
 
@@ -87,18 +87,21 @@ JSBool Require(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   JSBool retval = JS_TRUE;
   int i;
   for (i = 0; i < prop_ids->length; ++i) {
+    xassert(JS_EnterLocalRootScope(cx));
     jsval prop;
     JSBool rv = JS_IdToValue(cx, prop_ids->vector[i], &prop);
-    argv[argc+1] = prop;
     xassert(rv);
     JSString *prop_str = JSVAL_TO_STRING(prop);
-    char *prop_name = JS_GetStringBytes(prop_str);
+    char *prop_name = JS_EncodeString(cx, prop_str);
+    xassert(prop_name);
     jsval prop_val;
     rv = JS_GetProperty(cx, args, prop_name, &prop_val);
     xassert(rv);
 
     rv = dispatch_require(cx, prop_name, prop_val);
     if (rv == JS_FALSE) retval = JS_FALSE;
+    JS_free(cx, prop_name);
+    JS_LeaveLocalRootScope(cx);
   }
   JS_DestroyIdArray(cx, prop_ids);
   if (!retval) return retval;
@@ -106,7 +109,7 @@ JSBool Require(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   /* Report the now-current options. */
   JSObject *rvalo = JS_NewObject(cx, NULL, NULL, NULL);
   if (!rvalo) return JS_FALSE;
-  *rval = OBJECT_TO_JSVAL(rvalo);
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(rvalo));
   JS_DefineProperty(
       cx, rvalo, "version", get_version(cx), NULL, NULL, JSPROP_ENUMERATE);
   uint32 options = JS_GetOptions(cx);
@@ -142,7 +145,7 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
     return JS_FALSE;
   }
 
-  JSScript *script = JS_CompileScript(cx, ns,
+  JSObject *script = JS_CompileScript(cx, ns,
                                       content, size, realname, 1);
   free(realname);
   if (script == NULL) {
@@ -150,11 +153,10 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
     return JS_FALSE;
   }
 
-  JSObject *sobj = JS_NewScriptObject(cx, script);
-  JS_AddNamedRoot(cx, &sobj, filename);
+  JS_AddNamedObjectRoot(cx, &script, filename);
   jsval rval;
   JSBool rv = JS_ExecuteScript(cx, ns, script, &rval);
-  JS_RemoveRoot(cx, &sobj);
+  JS_RemoveObjectRoot(cx, &script);
   if (!rv) {
     xassert(JS_IsExceptionPending(cx));
     return JS_FALSE;
@@ -163,14 +165,21 @@ static JSBool jshydra_loadScript (JSContext *cx, const char *filename,
 }
 
 /* should use this function to load all objects to avoid possibity of objects including themselves */
-JSBool Include(JSContext *cx, JSObject *obj, uintN argc,
-               jsval *argv, jsval *rval) {
-  char *filename;
-  JSObject *ns = globalObj;
-  if (!JS_ConvertArguments(cx, argc, argv, "s/o", &filename, &ns))
+JSBool Include(JSContext *cx, uintN argc, jsval *vp)
+{
+  jsval *argv = JS_ARGV(cx, vp);
+  if (!JSVAL_IS_STRING(argv[0]))
     return JS_FALSE;
+
+  char *filename = JS_EncodeString(cx, JSVAL_TO_STRING(argv[0]));
+  xassert(filename);
+
+  JSObject *ns = globalObj;
+  if (!JS_ConvertArguments(cx, argc, argv, "*/o", &filename, &ns))
+    return JS_FALSE;
+
+  JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(ns));
  
-  *rval = OBJECT_TO_JSVAL (ns);
   JSObject *includedArray = NULL;
   jsval val;
   JS_GetProperty(cx, ns, "_includedArray", &val);
@@ -186,27 +195,33 @@ JSBool Include(JSContext *cx, JSObject *obj, uintN argc,
     if (JSVAL_TO_INT (val) != -1) return JS_TRUE;
   }
 
-  JS_CallFunctionName (cx, includedArray, "push", 1, argv, rval);
-  return jshydra_loadScript (cx, filename, ns);
+  JS_CallFunctionName (cx, includedArray, "push", 1, argv, &JS_RVAL(cx,vp));
+  JSBool rv = jshydra_loadScript (cx, filename, ns);
+  JS_free(cx, filename);
+  return rv;
 }
 
-JSBool Diagnostic(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                  jsval *rval) {
+JSBool Diagnostic(JSContext *cx, uintN argc, jsval *vp)
+{
+  jsval *argv = JS_ARGV(cx, vp);
   JSBool is_error;
-  const char *msg, *file, *error_string;
+  const char *msg, *error_string;
+  char *file;
   jsint line;
   JSObject *loc_obj = NULL;
 
-  if (!JS_ConvertArguments(cx, argc, argv, "bs/o", &is_error, &msg, &loc_obj))
+  if (!JS_ConvertArguments(cx, argc, argv, "b*/o", &is_error, &msg, &loc_obj))
     return JS_FALSE;
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);
   error_string = is_error ? "error" : "warning";
   if (loc_obj) {
     jsval jsfile, jsline;
     if (JS_GetProperty(cx, loc_obj, "file", &jsfile) &&
         JS_GetProperty(cx, loc_obj, "line", &jsline)) {
-      file = JS_GetStringBytes(JSVAL_TO_STRING(jsfile));
+      file = JS_EncodeString(cx, JSVAL_TO_STRING(jsfile));
       line = JSVAL_TO_INT(jsline);
       printf("%s:%d: %s: %s\n", file, line, error_string, msg);
+      JS_free(cx, file);
       return JS_TRUE;
     }
   }
@@ -215,53 +230,73 @@ JSBool Diagnostic(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   return JS_TRUE;
 }
 
-JSBool Print(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-             jsval *rval)
+JSBool Print(JSContext *cx, uintN argc, jsval *vp)
 {
   uintN i;
+  jsval *argv = JS_ARGV(cx, vp);
   for (i = 0; i < argc; i++) {
     JSString *str = JS_ValueToString(cx, argv[i]);
     if (!str)
       return JS_FALSE;
-    printf("%s", JS_GetStringBytes(str));
+    char *c_str = JS_EncodeString(cx, str);
+    printf("%s", c_str);
+    JS_free(cx, c_str);
   }
   printf("\n");
+  JS_SET_RVAL(cx, vp, JSVAL_VOID);
   return JS_TRUE;
 }
 
-JSBool WriteFile(JSContext *cx, JSObject *obj, uintN argc,
-                jsval *argv, jsval *rval) {
-  const char *filename;
+JSBool WriteFile(JSContext *cx, uintN argc, jsval *vp)
+{
+  jsval *argv = JS_ARGV(cx, vp);
   JSString *str;
-  JSBool rv = JS_ConvertArguments(cx, argc, argv, "sS", &filename, &str);
-  if (!rv) return JS_FALSE;
+  if (!JS_ConvertArguments(cx, argc, argv, "*S", &str))
+    return JS_FALSE;
+  if (!JSVAL_IS_STRING(argv[0]))
+    return JS_FALSE;
 
+  char *filename = JS_EncodeString(cx, JSVAL_TO_STRING(argv[0]));
+  xassert(filename);
+
+  JSBool rv = JS_FALSE;
   FILE *f = fopen (filename, "w");
   if (!f) {
     REPORT_ERROR_2(cx, "write_file: error opening file '%s': %s",
                    filename, strerror(errno));
-    return JS_FALSE;
+  } else {
+    char *bytes = JS_EncodeString(cx, str);
+    xassert(bytes);
+    fwrite (bytes, 1, JS_GetStringLength(str), f);
+    fclose (f);
+    JS_free(cx, bytes);
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+    rv = JS_TRUE;
   }
-  fwrite (JS_GetStringBytes(str), 1, JS_GetStringLength(str), f);
-  fclose (f);
-  return JS_TRUE;
+  JS_free(cx, filename);
+  return rv;
 }
 
-JSBool ReadFile(JSContext *cx, JSObject *obj, uintN argc,
-                jsval *argv, jsval *rval) {
-  const char *filename;
-  JSBool rv = JS_ConvertArguments(cx, argc, argv, "s", &filename);
-  if (!rv) return JS_FALSE;
-
+JSBool ReadFile(JSContext *cx, uintN argc, jsval *vp)
+{
+  jsval *argv = JS_ARGV(cx, vp);
+  if (!JSVAL_IS_STRING(argv[0]))
+    return JS_FALSE;
+  char *filename = JS_EncodeString(cx, JSVAL_TO_STRING(argv[0]));
+  xassert(filename);
   long size = 0;
   char *buf = readFile (filename, &size);
+  JSBool rv = JS_FALSE;
   if(!buf) {
     REPORT_ERROR_2(cx, "read_file: error opening file '%s': %s",
                    filename, strerror(errno));
-    return JS_FALSE;
+  } else {
+    JS_SET_RVAL(cx, vp, STRING_TO_JSVAL(JS_NewStringCopyN(cx, buf, size)));
+    rv = JS_TRUE;
   }
-  *rval = STRING_TO_JSVAL(JS_NewString(cx, buf, size));
-  return JS_TRUE;
+  free(buf);
+  JS_free(cx, filename);
+  return rv;
 }
 
 /* author: tglek
@@ -269,33 +304,31 @@ JSBool ReadFile(JSContext *cx, JSObject *obj, uintN argc,
    The ES4 spec says that it shouldn't be a pointer(with good reason).
    A counter is morally wrong because in theory it could loop around and bite me,
    but I lack in moral values and don't enjoy abusing pointers any further */
-JSBool Hashcode(JSContext *cx, JSObject *obj_this, uintN argc,
-                    jsval *argv, jsval *rval)
+JSBool Hashcode(JSContext *cx, uintN argc, jsval *vp)
 {
   if (!argc)
-    return JSVAL_FALSE;
-  jsval o = *argv;
+    return JS_FALSE;
+  jsval o = *JS_ARGV(cx, vp);
   if (!JSVAL_IS_OBJECT (o)) {
-    *rval = o;
-    return JSVAL_TRUE;
+    JS_SET_RVAL(cx, vp, o);
+    return JS_TRUE;
   }
-  JSObject *obj = JSVAL_TO_OBJECT (*argv);
+  JSObject *obj = JSVAL_TO_OBJECT (o);
   JSBool has_prop;
   /* Need to check for property first to keep treehydra from getting angry */
-#if JS_VERSION < 180
-#define JS_AlreadyHasOwnProperty JS_HasProperty
-#endif
   if (JS_AlreadyHasOwnProperty(cx, obj, "_hashcode", &has_prop) && has_prop) {
-    JS_GetProperty(cx, obj, "_hashcode", rval);
+    jsval rval;
+    JS_GetProperty(cx, obj, "_hashcode", &rval);
+    JS_SET_RVAL(cx, vp, rval);
   } else {
     static int counter = 0;
     char str[256];
     jsval val;
-    JS_snprintf (str, sizeof (str), "%x", ++counter);
+    snprintf (str, sizeof (str), "%x", ++counter);
     val = STRING_TO_JSVAL (JS_NewStringCopyZ (cx, str));
     JS_DefineProperty (cx, obj, "_hashcode", val,
                        NULL, NULL, JSPROP_PERMANENT | JSPROP_READONLY);
-    *rval = val;
+    JS_SET_RVAL(cx, vp, val);
   }
   return JS_TRUE;
 }
@@ -394,7 +427,8 @@ ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     /* reformat the spidermonkey stack */
     JS_GetProperty(cx, JSVAL_TO_OBJECT (exn), "stack", &stack);
     if (JS_TypeOfValue (cx, stack) == JSTYPE_STRING) {
-      char *str = JS_GetStringBytes (JSVAL_TO_STRING (stack));
+      char *str = JS_EncodeString(cx, JSVAL_TO_STRING (stack));
+	  char *save_str = str;
       int counter = 0;
       do {
         char *eol = strchr (str, '\n');
@@ -413,6 +447,7 @@ ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
           break;
         }
       } while (*str);
+      JS_free(cx, save_str);
     }
   }
   fflush(stderr);

@@ -4,7 +4,7 @@
 
 /* JS Natives */
 
-#define DH_JSNATIVE(fname) JSBool fname(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+#define DH_JSNATIVE(fname) JSBool fname(JSContext *cx, uintN argc, jsval *vp)
  
 DH_JSNATIVE(Require);
 DH_JSNATIVE(Include);
