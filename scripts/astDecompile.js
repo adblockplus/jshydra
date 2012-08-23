@@ -167,8 +167,8 @@ function decompileVariableDeclaration(ast, excludeSemi) {
 
 function decompileVariableDeclarator(ast) {
   if (ast.init)
-    return ast.id.name + " = " + decompileAST(ast.init);
-  return ast.id.name;
+    return decompileAST(ast.id) + " = " + decompileAST(ast.init);
+  return decompileAST(ast.id);
 }
 
 /* Expressions */
