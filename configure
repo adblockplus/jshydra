@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # The mozilla-central known-good revision
-REV=ea128fc02710
+REV=5b8812d6950b
 
 usage() {
 echo "Usage: $0 ...
