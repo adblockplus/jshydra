@@ -324,7 +324,7 @@ JSBool Hashcode(JSContext *cx, uintN argc, jsval *vp)
     static int counter = 0;
     char str[256];
     jsval val;
-    snprintf (str, sizeof (str), "%x", ++counter);
+    JS_snprintf (str, sizeof (str), "%x", ++counter);
     val = STRING_TO_JSVAL (JS_NewStringCopyZ (cx, str));
     JS_DefineProperty (cx, obj, "_hashcode", val,
                        NULL, NULL, JSPROP_PERMANENT | JSPROP_READONLY);
