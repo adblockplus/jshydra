@@ -334,6 +334,8 @@ function modifyForInStatement(ast)
       body: block
     };
   }
+
+  return ast;
 }
 
 process_js = function(ast, filename, args)
