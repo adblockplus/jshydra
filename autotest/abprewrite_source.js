@@ -38,3 +38,18 @@ let a = function() 1;
 let b = {
   get foo() 1
 };
+
+function genFunc()
+{
+  for (var i = 0; i < 10; i++)
+  {
+    yield i;
+  }
+}
+var a = function()
+{
+  for (var i = 0; i < 10; i++)
+  {
+    yield i;
+  }
+};
