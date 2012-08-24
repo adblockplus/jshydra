@@ -66,3 +66,22 @@ var b =
     return 1;
   }
 };
+
+function genFunc()
+{
+  var _generatorResult10 = [];
+  for (var i = 0; i < 10; i++)
+  {
+    _generatorResult10.push(i);
+  }
+  return _generatorResult10;
+}
+var a = function()
+{
+  var _generatorResult10 = [];
+  for (var i = 0; i < 10; i++)
+  {
+    _generatorResult10.push(i);
+  }
+  return _generatorResult10;
+};

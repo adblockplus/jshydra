@@ -361,7 +361,68 @@ function modifyFunctionExpression(ast)
       ]
     };
   }
+
+  if (ast.generator)
+  {
+    // Convert generators:
+    // function()
+    // {
+    //   ...
+    //   yield "foo";
+    //   ...
+    // }
+    //
+    // Change into:
+    // function()
+    // {
+    //   var _generatorResult44 = [];
+    //   ...
+    //   _generatorResult44.push("foo");
+    //   ...
+    //   return _generatorResult44;
+    // }
+    //
+    // Note: yield statements are converted in modifyYieldExpression().
+    if (!("generatorVar" in options))
+      options.generatorVar = Identifier("_generatorResult" + options.varIndex++);
+
+    ast.generator = false;
+    ast.body.body.unshift(VariableDeclaration(options.generatorVar, {
+      type: "ArrayExpression",
+      elements: null
+    }));
+    ast.body.body.push({
+      type: "ReturnStatement",
+      argument: options.generatorVar
+    });
+  }
+
   return ast;
+}
+
+function modifyFunctionDeclaration(ast)
+{
+  return modifyFunctionExpression(ast);
+}
+
+function modifyYieldExpression(ast)
+{
+  // Convert generators into functions returning arrays:
+  // yield "foo";
+  //
+  // Change into:
+  // _generatorResult44.push("foo");
+
+  if (ast.argument)
+  {
+    return {
+      type: "CallExpression",
+      callee: Member(options.generatorVar, "push"),
+      arguments: [ast.argument]
+    };
+  }
+  else
+    return null;
 }
 
 process_js = function(ast, filename, args)
