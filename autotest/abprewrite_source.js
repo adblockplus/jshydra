@@ -33,3 +33,8 @@ for each (let [a, b] in fooList);
 
 for each (k in fooList)
   alert(k);
+
+let a = function() 1;
+let b = {
+  get foo() 1
+};

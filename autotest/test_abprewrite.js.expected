@@ -55,3 +55,14 @@ for (var _loopIndex9 = 0; _loopIndex9 < fooList.length; ++_loopIndex9)
   k = fooList[_loopIndex9];
   alert(k);
 }
+var a = function()
+{
+  return 1;
+};
+var b =
+{
+  get foo()
+  {
+    return 1;
+  }
+};

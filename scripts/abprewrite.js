@@ -338,6 +338,32 @@ function modifyForInStatement(ast)
   return ast;
 }
 
+function modifyFunctionExpression(ast)
+{
+  if (ast.expression)
+  {
+    // Convert expression closures:
+    // function() foo;
+    //
+    // Change into:
+    // function()
+    // {
+    //   return foo;
+    // }
+    ast.expression = false;
+    ast.body = {
+      type: "BlockStatement",
+      body: [
+        {
+          type: "ReturnStatement",
+          argument: ast.body
+        }
+      ]
+    };
+  }
+  return ast;
+}
+
 process_js = function(ast, filename, args)
 {
   for each (let arg in args.split(/\s+/))

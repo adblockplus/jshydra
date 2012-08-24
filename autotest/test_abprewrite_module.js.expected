@@ -58,5 +58,16 @@ require.scopes["abprewrite_source"] = (function()
     k = fooList[_loopIndex9];
     alert(k);
   }
+  var a = function()
+  {
+    return 1;
+  };
+  var b =
+  {
+    get foo()
+    {
+      return 1;
+    }
+  };
   return exports;
 })();
