@@ -19,7 +19,7 @@ _print('// * https://hg.adblockplus.org/jshydra/');
 _print('//');
 _print();
 
-include("astDecompile.js");
+include("../scripts/astDecompile.js");
 include("../utils/beautify.js");
 
 // See https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API for
@@ -161,7 +161,7 @@ function modifyAST(ast)
       {
         for (let j = 0; j < value.length; j++)
         {
-          if (typeof value[j] == "object" && "type" in value[j])
+          if (value[j] && typeof value[j] == "object" && "type" in value[j])
           {
             let result = modifyAST(value[j]);
             if (result)
@@ -366,7 +366,8 @@ process_js = function(ast, filename, args)
     let code = 'require.scopes["' + options.filename + '"] = (function() {\n' +
                'var exports = {};\n' +
                decompileAST(ast) +
-               '})();';
+               'return exports;\n' +
+               '})();\n';
     _print(js_beautify(code, options));
   }
   else
