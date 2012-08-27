@@ -23,10 +23,10 @@ def doRewrite():
     basedir = '.'
 
   if os.name == 'nt':
-    application = os.path.join(basedir, 'jshydra.exe')
+    application = os.path.join(basedir, 'mozilla', 'js', 'src', 'shell', 'js.exe')
   else:
-    application = os.path.join(basedir, 'jshydra')
-  command = [application, os.path.join(basedir, 'scripts', 'abprewrite.js'), '--trueast', '--arg', 'module=true']
+    application = os.path.join(basedir, 'mozilla', 'js', 'src', 'shell', 'js')
+  command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'module=true']
   for module in ('filterNotifier', 'filterClasses', 'subscriptionClasses', 'filterStorage', 'elemHide', 'matcher', 'filterListener', 'synchronizer'):
     sourceFile = os.path.join(sourceDir, 'lib', module + '.js')
     if not os.path.exists(sourceFile):

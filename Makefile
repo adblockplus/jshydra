@@ -28,11 +28,11 @@ clean:
 -include $(wildcard .deps/*.pp)
 
 TESTS := $(notdir $(wildcard autotest/test_*.js))
-check:: jshydra$(BIN_SUFFIX)
+check::
 	@cd autotest && for f in $(TESTS); do \
 		eval $$(cat $$f | sed -e '/^\/\/ [A-Za-z]*:/!q' -e 's+^// \([A-Za-z]*\): \(.*\)$$+export \1="\2"+'); \
 		echo -n "$$Name... "; \
-		../jshydra$(BIN_SUFFIX) $$f $$Arguments > .$$f.out 2>&1; \
+		../mozilla/js/src/shell/js$(BIN_SUFFIX) ../jshydra.js $$f $$Arguments > .$$f.out 2>&1; \
 		if diff -w -q ".$$f.out" "$$f.expected" >/dev/null 2>&1; then \
 			echo ' passed!'; \
 		else \
