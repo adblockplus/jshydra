@@ -174,9 +174,9 @@ function decompileVariableDeclarator(ast) {
 /* Expressions */
 let precedence = {
   "FunctionExpression": 0,
-  "YieldExpression": 1,
-  "SequenceExpression": 2,
-  "AssignmentExpression": 3,
+  "SequenceExpression": 1,
+  "AssignmentExpression": 2,
+  "YieldExpression": 3,
   "ConditionalExpression": 4,
   "||": 5,
   "&&": 6,
