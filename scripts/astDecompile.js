@@ -190,8 +190,8 @@ let precedence = {
   "UnaryExpression": 14,
   "UpdateExpression": 15,
   "NewExpression": 16,
-  "FunctionExpression": 17,
-  "CallExpression": 18, "MemberExpression": 18
+  "CallExpression": 17, "MemberExpression": 17,
+  "FunctionExpression": 18
   /* Everything else is 19 */
 };
 
