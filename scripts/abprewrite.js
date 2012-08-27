@@ -130,6 +130,14 @@ function IncExpression(variable)
   };
 }
 
+function ensureBlock(ast)
+{
+  if (ast.type == "BlockStatement")
+    return ast;
+  else
+    return {type: "BlockStatement", body: (ast.type == "EmptyStatement" ? [] : [ast])};
+}
+
 function modifyAST(ast)
 {
   // Do the necessary modifications
@@ -300,6 +308,29 @@ function modifyVariableDeclaration(ast)
   return ast;
 }
 
+function modifyForStatement(ast)
+{
+  // Make sure that the loop body is always wrapped in a block
+  ast.body = ensureBlock(ast.body);
+  return ast;
+}
+
+function modifyWhileStatement(ast)
+{
+  // Make sure that the loop body is always wrapped in a block
+  ast.body = ensureBlock(ast.body);
+  return ast;
+}
+
+function modifyIfStatement(ast)
+{
+  // Make sure that the statements are always wrapped in a block
+  ast.consequent = ensureBlock(ast.consequent);
+  if (ast.alternate && ast.alternate.type != "IfStatement")
+    ast.alternate = ensureBlock(ast.alternate);
+  return ast;
+}
+
 function modifyForInStatement(ast)
 {
   if (ast.each)
@@ -318,9 +349,7 @@ function modifyForInStatement(ast)
     // }
     let loopIndex = Identifier("_loopIndex" + options.varIndex++);
 
-    let block = ast.body;
-    if (block.type != "BlockStatement")
-      block = {type: "BlockStatement", body: (block.type == "EmptyStatement" ? [] : [block])};
+    let block = ensureBlock(ast.body);
     if (ast.left.type == "VariableDeclaration")
       block.body.unshift(VariableDeclaration(ast.left.declarations[0].id, Member(ast.right, loopIndex, true)));
     else
@@ -334,6 +363,9 @@ function modifyForInStatement(ast)
       body: block
     };
   }
+
+  // Make sure that the loop body is always wrapped in a block
+  ast.body = ensureBlock(ast.body);
 
   return ast;
 }
