@@ -203,8 +203,8 @@ function getPrecedence(expr) {
   return 19;
 }
 
-function decompileExpr(expr, par) {
-  if (getPrecedence(expr) < getPrecedence(par))
+function decompileExpr(expr, par, forceParen) {
+  if (getPrecedence(expr) < getPrecedence(par) || (forceParen && getPrecedence(expr) == getPrecedence(par)))
     return "(" + decompileAST(expr) + ")";
   else
     return decompileAST(expr);
@@ -250,11 +250,11 @@ function decompileUnaryExpression(ast) {
 
 function decompileBinaryExpression(ast) {
   return decompileExpr(ast.left, ast) + " " + ast.operator +
-    " " + decompileExpr(ast.right, ast);
+    " " + decompileExpr(ast.right, ast, true);
 }
 
 function decompileAssignmentExpression(ast) {
-  return decompileExpr(ast.left, ast) + " " + ast.operator +
+  return decompileExpr(ast.left, ast, true) + " " + ast.operator +
     " " + decompileExpr(ast.right, ast);
 }
 
@@ -269,7 +269,7 @@ function decompileUpdateExpression(ast) {
 
 function decompileLogicalExpression(ast) {
   return decompileExpr(ast.left, ast) + " " + ast.operator +
-    " " + decompileExpr(ast.right, ast);
+    " " + decompileExpr(ast.right, ast, true);
 }
 
 function decompileConditionalExpression(ast) {
