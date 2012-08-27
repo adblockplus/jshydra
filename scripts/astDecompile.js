@@ -67,7 +67,7 @@ function decompileReturnStatement(ast) {
 }
 
 function decompileThrowStatement(ast) {
-  return "throw " + decompileAST(ast.argument);
+  return "throw " + decompileAST(ast.argument) + ";";
 }
 
 function decompileTryStatement(ast) {
