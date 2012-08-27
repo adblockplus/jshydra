@@ -39,6 +39,26 @@ let b = {
   get foo() 1
 };
 
+if (a == b)
+  foo();
+else if (a == c)
+  bar();
+else
+  bas();
+if (a == b);
+
+for (var a = 0; a < b.length; a++)
+  foo();
+for (var a = 0; a < b.length; a++);
+
+for (var a in b)
+  foo();
+for (var a in b);
+
+while (a==b)
+  foo();
+while (a==b);
+
 function genFunc()
 {
   for (var i = 0; i < 10; i++)
