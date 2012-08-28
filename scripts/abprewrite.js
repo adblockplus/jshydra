@@ -1,26 +1,10 @@
 // This script rewrites AST to be compatible with JavaScript 1.5 and decompiles
 // the modified tree then
 
-// Output license header and warning - do this only once, not each time a file
-// is being processed.
-_print('/*');
-_print(' * This Source Code is subject to the terms of the Mozilla Public License');
-_print(' * version 2.0 (the "License"). You can obtain a copy of the License at');
-_print(' * http://mozilla.org/MPL/2.0/.');
-_print(' */');
-_print();
-_print('//');
-_print('// This file has been generated automatically from Adblock Plus for Firefox');
-_print('// source code. DO NOT MODIFY, change the original source code instead.');
-_print('//');
-_print('// Relevant repositories:');
-_print('// * https://hg.adblockplus.org/adblockplus/');
-_print('// * https://hg.adblockplus.org/jshydra/');
-_print('//');
-_print();
-
 include("../scripts/astDecompile.js");
 include("../utils/beautify.js");
+
+let headerPrinted = false;
 
 // See https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API for
 // AST structure.
@@ -31,7 +15,8 @@ let options = {
   varIndex: 0,
   indent_size: 2,
   preserve_newlines: false,
-  brace_style: "expand-strict"
+  brace_style: "expand-strict",
+  source_repo: ""
 };
 let global = this;
 
@@ -464,6 +449,32 @@ process_js = function(ast, filename, args)
     let match = /^(\w+)\s*=\s*(.*)/.exec(arg);
     if (match && typeof options[match[1]] == "boolean")
       options[match[1]] = (match[2] == "true");
+    else if (match && typeof options[match[1]] == "string")
+      options[match[1]] = match[2];
+  }
+
+  if (!headerPrinted)
+  {
+    // Output license header and warning - do this only once, not each time a file
+    // is being processed.
+    _print('/*');
+    _print(' * This Source Code is subject to the terms of the Mozilla Public License');
+    _print(' * version 2.0 (the "License"). You can obtain a copy of the License at');
+    _print(' * http://mozilla.org/MPL/2.0/.');
+    _print(' */');
+    _print();
+    _print('//');
+    _print('// This file has been generated automatically from Adblock Plus for Firefox');
+    _print('// source code. DO NOT MODIFY, change the original source code instead.');
+    _print('//');
+    _print('// Relevant repositories:');
+    if (options.source_repo)
+      _print('// * ' + options.source_repo);
+    _print('// * https://hg.adblockplus.org/jshydra/');
+    _print('//');
+    _print();
+
+    headerPrinted = true;
   }
 
   options.filename = filename.replace(/.*[\\\/]/, "").replace(/\.jsm?$/, "");
