@@ -204,7 +204,7 @@ function getPrecedence(expr) {
 }
 
 function decompileExpr(expr, par, forceParen) {
-  if (getPrecedence(expr) < getPrecedence(par) || (forceParen && getPrecedence(expr) == getPrecedence(par)))
+  if (getPrecedence(expr) < getPrecedence(par) || (forceParen && getPrecedence(expr) == getPrecedence(par)) || (expr.type == "FunctionExpression" && par.type == "CallExpression"))
     return "(" + decompileAST(expr) + ")";
   else
     return decompileAST(expr);
