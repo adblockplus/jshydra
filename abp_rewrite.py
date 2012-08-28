@@ -27,7 +27,7 @@ def doRewrite():
     application = os.path.join(basedir, 'mozilla', 'js', 'src', 'shell', 'js.exe')
   else:
     application = os.path.join(basedir, 'mozilla', 'js', 'src', 'shell', 'js')
-  command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'module=true']
+  command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'module=true source_repo=https://hg.adblockplus.org/adblockplus/']
   for module in ('filterNotifier', 'filterClasses', 'subscriptionClasses', 'filterStorage', 'elemHide', 'matcher', 'filterListener', 'synchronizer'):
     sourceFile = os.path.join(sourceDir, 'lib', module + '.js')
     if not os.path.exists(sourceFile):
@@ -38,8 +38,8 @@ def doRewrite():
   out = open(os.path.join(targetDir, 'lib', 'adblockplus.js'), 'wb')
   subprocess.Popen(command, stdout=out).communicate()
 
-  command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js')]
-  for test in ('domainRestrictions', 'filterClasses', 'subscriptionClasses', 'matcher'):
+  command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'source_repo=https://hg.adblockplus.org/adblockplustests/']
+  for test in ('domainRestrictions', 'filterClasses', 'filterNotifier', 'filterStorage', 'matcher', 'regexpFilters_matching', 'subscriptionClasses'):
     sourceFile = os.path.join(testsDir, 'chrome', 'content', 'tests', test + '.js')
     if not os.path.exists(sourceFile):
       print 'Source file %s could not be found' % sourceFile
