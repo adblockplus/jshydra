@@ -8,15 +8,16 @@
 import sys, os, subprocess
 
 def doRewrite():
-  if len(sys.argv) < 3:
+  if len(sys.argv) < 4:
     print '''Usage:
 
-%s <abp_firefox_dir> <abp_chrome_dir>
+%s <abp_firefox_dir> <abptests_dir> <abp_chrome_dir>
 ''' % sys.argv[0]
     sys.exit(2)
 
   sourceDir = sys.argv[1]
-  targetDir = sys.argv[2]
+  testsDir = sys.argv[2]
+  targetDir = sys.argv[3]
 
   basedir = os.path.dirname(sys.argv[0])
   if not basedir:
@@ -35,6 +36,17 @@ def doRewrite():
     command.append(sourceFile)
 
   out = open(os.path.join(targetDir, 'lib', 'adblockplus.js'), 'wb')
+  subprocess.Popen(command, stdout=out).communicate()
+
+  command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js')]
+  for test in ('domainRestrictions', 'filterClasses', 'subscriptionClasses', 'matcher'):
+    sourceFile = os.path.join(testsDir, 'chrome', 'content', 'tests', test + '.js')
+    if not os.path.exists(sourceFile):
+      print 'Source file %s could not be found' % sourceFile
+      sys.exit(2)
+    command.append(sourceFile)
+
+  out = open(os.path.join(targetDir, 'qunit', 'tests', 'adblockplus.js'), 'wb')
   subprocess.Popen(command, stdout=out).communicate()
 
 if __name__ == '__main__':
