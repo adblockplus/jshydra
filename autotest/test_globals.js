@@ -1,4 +1,4 @@
-// Arguments: test_globals.js
+// Arguments: autotest/test_globals.js
 // Name: Global information test
 
 include("../utils/cleanast.js");

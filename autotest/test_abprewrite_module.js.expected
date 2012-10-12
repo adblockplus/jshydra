@@ -9,7 +9,6 @@
 // source code. DO NOT MODIFY, change the original source code instead.
 //
 // Relevant repositories:
-// * https://hg.adblockplus.org/adblockplus/
 // * https://hg.adblockplus.org/jshydra/
 //
 
@@ -92,11 +91,11 @@ require.scopes["abprewrite_source"] = (function()
     foo();
   }
   for (var a in b){}
-  while (a==b)
+  while (a == b)
   {
     foo();
   }
-  while (a==b){}
+  while (a == b){}
 
   function genFunc()
   {

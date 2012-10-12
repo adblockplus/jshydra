@@ -1,4 +1,4 @@
-// Arguments: test_trueast.js
+// Arguments: autotest/test_trueast.js
 // Name: Simple asts
 
 include("../utils/astml.js");

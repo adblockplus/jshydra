@@ -1,4 +1,4 @@
-// Arguments: test_comments.js
+// Arguments: autotest/test_comments.js
 // Name: Comment association test
 
 // This comment is associated with only code, so I don't see this.
