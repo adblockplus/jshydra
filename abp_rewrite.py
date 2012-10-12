@@ -5,7 +5,37 @@
 # version 2.0 (the "License"). You can obtain a copy of the License at
 # http://mozilla.org/MPL/2.0/.
 
-import sys, os, subprocess
+import sys, os, subprocess, urllib, zipfile
+from StringIO import StringIO
+
+def ensureJSShell(basedir):
+  shell_dir = os.path.join(basedir, 'mozilla')
+  if not os.path.exists(shell_dir):
+    os.makedirs(shell_dir)
+  if sys.platform == 'win32':
+    path = os.path.join(shell_dir, 'js.exe')
+  else:
+    path = os.path.join(shell_dir, 'js')
+  if os.path.exists(path):
+    return path
+
+  platform_map = {
+    'win32': 'win32',
+    'linux2': 'linux-i686',
+    'darwin': 'mac',
+  }
+  if sys.platform not in platform_map:
+    raise Exception('Unknown platform, is there a JS shell version for it?')
+
+  download_url = 'http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/16.0.1-candidates/build1/jsshell-%s.zip' % platform_map[sys.platform]
+  data = StringIO(urllib.urlopen(download_url).read())
+  zip = zipfile.ZipFile(data)
+  zip.extractall(shell_dir)
+  zip.close()
+
+  if not os.path.exists(path):
+    raise Exception('Downloaded package didn\'t contain JS shell executable')
+  return path
 
 def doRewrite():
   if len(sys.argv) < 4:
@@ -23,10 +53,7 @@ def doRewrite():
   if not basedir:
     basedir = '.'
 
-  if os.name == 'nt':
-    application = os.path.join(basedir, 'mozilla', 'js', 'src', 'shell', 'js.exe')
-  else:
-    application = os.path.join(basedir, 'mozilla', 'js', 'src', 'shell', 'js')
+  application = ensureJSShell(basedir)
   command = [application, os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'module=true source_repo=https://hg.adblockplus.org/adblockplus/']
   for module in ('filterNotifier', 'filterClasses', 'subscriptionClasses', 'filterStorage', 'elemHide', 'matcher', 'filterListener', 'synchronizer'):
     sourceFile = os.path.join(sourceDir, 'lib', module + '.js')
