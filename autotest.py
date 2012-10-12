@@ -5,7 +5,7 @@
 # version 2.0 (the "License"). You can obtain a copy of the License at
 # http://mozilla.org/MPL/2.0/.
 
-import sys, os, subprocess, re
+import sys, os, subprocess, re, difflib
 from utils import ensureJSShell
 
 def run_tests():
@@ -41,7 +41,9 @@ def run_tests():
       print '%s passed' % name
     else:
       print '%s failed! Log:' % name
-      print out
+      for line in difflib.unified_diff(expected.split('\n'), out.split('\n'), fromfile=file + '.expected', tofile=file + '.output'):
+        print line
+      print
 
 if __name__ == '__main__':
   run_tests()
