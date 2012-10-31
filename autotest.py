@@ -34,7 +34,7 @@ def run_tests():
     if arguments == None:
       continue
 
-    command = [application, os.path.join(basedir, 'jshydra.js'), file] + arguments
+    command = [application, '-U', os.path.join(basedir, 'jshydra.js'), file] + arguments
     out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0].replace('\r', '')
     expected = open(file + '.expected', 'r').read().replace('\r', '')
     if out == expected:
