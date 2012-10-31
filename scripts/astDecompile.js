@@ -76,8 +76,8 @@ function decompileTryStatement(ast) {
   let handlers = [];
   if (ast.handler && "type" in ast.handler)
     handlers.push(ast.handler);
-  else if (ast.handler)
-    handlers = ast.handler;
+  else if (ast.handlers)
+    handlers = ast.handlers;
 
   let handler_strs = [];
   for each (let handler in handlers) {
