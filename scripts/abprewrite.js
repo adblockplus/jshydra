@@ -458,9 +458,20 @@ process_js = function(ast, filename, args)
     // Output license header and warning - do this only once, not each time a file
     // is being processed.
     _print('/*');
-    _print(' * This Source Code is subject to the terms of the Mozilla Public License');
-    _print(' * version 2.0 (the "License"). You can obtain a copy of the License at');
-    _print(' * http://mozilla.org/MPL/2.0/.');
+    _print(' * This file is part of the Adblock Plus extension,');
+    _print(' * Copyright (C) 2006-2012 Eyeo GmbH');
+    _print(' *');
+    _print(' * Adblock Plus is free software: you can redistribute it and/or modify');
+    _print(' * it under the terms of the GNU General Public License version 3 as');
+    _print(' * published by the Free Software Foundation.');
+    _print(' *');
+    _print(' * Adblock Plus is distributed in the hope that it will be useful,');
+    _print(' * but WITHOUT ANY WARRANTY; without even the implied warranty of');
+    _print(' * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the');
+    _print(' * GNU General Public License for more details.');
+    _print(' *');
+    _print(' * You should have received a copy of the GNU General Public License');
+    _print(' * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.');
     _print(' */');
     _print();
     _print('//');
