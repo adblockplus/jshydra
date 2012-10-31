@@ -51,11 +51,11 @@ function decompileSwitchStatement(ast) {
   let str = "switch (" + decompileAST(ast.discriminant) + ") {\n";
   let cases = [];
   for each (let scase in ast.cases) {
-	let casestr = scase.test ? "case " + decompileAST(scase.test) : "default";
-	casestr += ":\n";
+    let casestr = scase.test ? "case " + decompileAST(scase.test) : "default";
+    casestr += ":\n";
     casestr += [decompileAST(stmt) for each (stmt in scase.consequent)]
       .join('\n');
-	cases.push(casestr);
+    cases.push(casestr);
   }
   str += cases.join('\n') + '\n}\n';
   return str;
@@ -72,24 +72,24 @@ function decompileThrowStatement(ast) {
 
 function decompileTryStatement(ast) {
   let str = "try " + decompileAST(ast.block);
-  
+
   let handlers = [];
   if (ast.handler && "type" in ast.handler)
-	handlers.push(ast.handler);
+    handlers.push(ast.handler);
   else if (ast.handler)
-	handlers = ast.handler;
+    handlers = ast.handler;
 
   let handler_strs = [];
   for each (let handler in handlers) {
-	let handler_str = "catch (" + decompileAST(handler.param);
-	if (handler.guard)
+    let handler_str = "catch (" + decompileAST(handler.param);
+    if (handler.guard)
       handler_str += " if " + decompileAST(handler.guard);
-	handler_str += ") " + decompileAST(handler.body);
-	handler_strs.push(handler_str);
+    handler_str += ") " + decompileAST(handler.body);
+    handler_strs.push(handler_str);
   }
   str += handler_strs.join("");
   if (ast.finalizer)
-	str += " finally " + decompileAST(ast.finalizer);
+    str += " finally " + decompileAST(ast.finalizer);
   return str;
 }
 
@@ -104,9 +104,9 @@ function decompileDoWhileStatement(ast) {
 function decompileForStatement(ast) {
   let str = "for (";
   if (ast.init) {
-	if (ast.init.type == "VariableDeclaration")
+    if (ast.init.type == "VariableDeclaration")
       str += decompileAST(ast.init);
-	else
+    else
       str += decompileAST(ast.init) + ";";
   } else {
     str += ";";
@@ -123,12 +123,12 @@ function decompileForStatement(ast) {
 function decompileForInStatement(ast) {
   let str = "for";
   if (ast.each)
-	  str += " each";
+      str += " each";
   str += "(";
   if (ast.left.type == "VariableDeclaration")
-	  str += decompileVariableDeclaration(ast.left, true);
+      str += decompileVariableDeclaration(ast.left, true);
   else
-	  str += decompileAST(ast.left);
+      str += decompileAST(ast.left);
   str += " in " + decompileExpr(ast.right, ast) + ") ";
   str += decompileAST(ast.body);
   return str;
@@ -150,7 +150,7 @@ function decompileFunctionDeclaration(ast, init, name_ast) {
   if (ast.id)
     str += ast.id.name;
   else if (name_ast)
-	str += decompileAST(name_ast);
+    str += decompileAST(name_ast);
   str += "(";
   str += [decompileAST(param) for each (param in ast.params)].join(', ');
   str += ") " + decompileAST(ast.body);
@@ -211,7 +211,7 @@ function decompileExpr(expr, par, forceParen) {
 }
 
 function decompileThisExpression(ast) {
-	return "this";
+    return "this";
 }
 
 function decompileArrayExpression(ast) {
@@ -224,12 +224,12 @@ function decompileArrayExpression(ast) {
 function decompileObjectExpression(ast) {
   let props = [];
   for each (let prop in ast.properties) {
-	if (prop.kind == "init")
+    if (prop.kind == "init")
       props.push(decompileAST(prop.key) + ": " + decompileAST(prop.value));
-	else if (prop.kind == "get" || prop.kind == "set")
-	  props.push(decompileFunctionDeclaration(prop.value, prop.kind, prop.key));
-	else
-	  throw "Unknown kind " + prop.kind;
+    else if (prop.kind == "get" || prop.kind == "set")
+      props.push(decompileFunctionDeclaration(prop.value, prop.kind, prop.key));
+    else
+      throw "Unknown kind " + prop.kind;
   }
   return "{\n" + props.join(",\n") + "}";
 }
@@ -261,8 +261,8 @@ function decompileAssignmentExpression(ast) {
 function decompileUpdateExpression(ast) {
   let before = "", after = ast.operator;
   if (ast.prefix) {
-	  before = after;
-	  after = "";
+      before = after;
+      after = "";
   }
   return before + decompileExpr(ast.argument, ast) + after;
 }
@@ -281,7 +281,7 @@ function decompileConditionalExpression(ast) {
 function decompileNewExpression(ast) {
   let str = "new " + decompileAST(ast.callee, ast) + "(";
   if (ast.arguments)
-	str += [decompileAST(arg) for each (arg in ast.arguments)].join(", ");
+    str += [decompileAST(arg) for each (arg in ast.arguments)].join(", ");
   str += ")";
   return str;
 }
@@ -321,7 +321,7 @@ function decompileYieldExpression(ast) {
 function decompileComprehensionExpression(ast, paren) {
   let str = (paren ? paren.l : "[") + decompileAST(ast.body);
   for each (let block in ast.blocks) {
-    str += (block.each ? " for each " : " for ") 
+    str += (block.each ? " for each " : " for ")
     str += "(" + decompileAST(block.left) + " in ";
     str += decompileAST(block.right) + ")";
   }
@@ -351,13 +351,13 @@ function decompileLetExpression(ast) {
 function decompileObjectPattern(ast) {
   let str = "{";
   str += [decompileAST(p.key) + ": " + decompileAST(p.value)
-	for each (p in ast.properties)].join(', ');
+    for each (p in ast.properties)].join(', ');
   return str + "}";
 }
 
 function decompileArrayPattern(ast) {
   return "[" +
-	[e ? decompileAST(e) : ' ' for each (e in ast.elements)].join(', ') + "]";
+    [e ? decompileAST(e) : ' ' for each (e in ast.elements)].join(', ') + "]";
 }
 
 function decompileIdentifier(ast) { return ast.name; }
@@ -383,7 +383,7 @@ function decompileLiteral(ast) {
   if (typeof ast.value == "string")
     return '"' + sanitize(ast.value, '"') + '"';
   if (ast.value === null)
-	  return "null";
+      return "null";
   return ast.value;
 }
 
@@ -399,20 +399,20 @@ function decompileXMLAnyName(ast) {
 function decompileXMLQualifiedIdentifier(ast) {
   let str = decompileAST(ast.left) + "::";
   if (ast.computed)
-	str += "[";
+    str += "[";
   str += decompileAST(ast.right);
   if (ast.computed)
-	str += "]";
+    str += "]";
   return str;
 }
 
 function decompileXMLFunctionQualifiedIdentifier(ast) {
   let str = "function::";
   if (ast.computed)
-	str += "[";
+    str += "[";
   str += decompileAST(ast.right);
   if (ast.computed)
-	str += "]";
+    str += "]";
   return str;
 }
 
@@ -461,7 +461,7 @@ function decompileXMLPointTag(ast) {
 
 function decompileXMLName(ast) {
   if (typeof ast.contents == "string")
-	return ast.contents + " ";
+    return ast.contents + " ";
   return [decompileAST(xml) for each (xml in ast.contents)].join('');
 }
 
@@ -482,5 +482,5 @@ function decompileXMLProcessingInstruction(ast) {
 }
 
 function process_js(ast) {
-	_print(decompileAST(ast));
+    _print(decompileAST(ast));
 }
