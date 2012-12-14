@@ -5,6 +5,8 @@ var include = function(file)
 
   if (include.dirStack.length && !/^([a-zA-Z]:)?[\/\\]/.test(file))
     file = include.dirStack[include.dirStack.length - 1] + "/../" + file;
+  while (/\/[^.\/][^\/]*\/\.\.(?=\/)/.test(file))
+    file = file.replace(/\/[^.\/][^\/]*\/\.\.(?=\/)/, "");
 
   include.dirStack.push(file);
   try
