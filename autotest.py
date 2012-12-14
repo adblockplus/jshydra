@@ -14,6 +14,9 @@ def run_tests():
     basedir = '.'
 
   application = ensureJSShell(basedir)
+  env = {
+    'LD_LIBRARY_PATH': os.path.dirname(application),
+  }
   testdir = os.path.join(basedir, 'autotest')
   for file in os.listdir(testdir):
     if not re.search(r'^test_.*\.js$', file):
@@ -35,7 +38,7 @@ def run_tests():
       continue
 
     command = [application, '-U', os.path.join(basedir, 'jshydra.js'), file] + arguments
-    out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).communicate()[0].replace('\r', '')
+    out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env).communicate()[0].replace('\r', '')
     expected = open(file + '.expected', 'r').read().replace('\r', '')
     if out == expected:
       print '%s passed' % name

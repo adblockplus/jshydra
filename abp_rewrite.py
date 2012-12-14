@@ -25,6 +25,9 @@ def doRewrite():
     basedir = '.'
 
   application = ensureJSShell(basedir)
+  env = {
+    'LD_LIBRARY_PATH': os.path.dirname(application),
+  }
   command = [application, '-U', os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'module=true source_repo=https://hg.adblockplus.org/adblockplus/']
   for module in ('filterNotifier', 'filterClasses', 'subscriptionClasses', 'filterStorage', 'elemHide', 'matcher', 'filterListener', 'synchronizer'):
     sourceFile = os.path.join(sourceDir, 'lib', module + '.js')
@@ -34,7 +37,7 @@ def doRewrite():
     command.append(sourceFile)
 
   out = open(os.path.join(targetDir, 'lib', 'adblockplus.js'), 'wb')
-  subprocess.Popen(command, stdout=out).communicate()
+  subprocess.Popen(command, stdout=out, env=env).communicate()
 
   command = [application, '-U', os.path.join(basedir, 'jshydra.js'), os.path.join(basedir, 'scripts', 'abprewrite.js'), '--arg', 'source_repo=https://hg.adblockplus.org/adblockplustests/']
   for test in ('domainRestrictions', 'filterClasses', 'filterNotifier', 'filterStorage', 'matcher', 'regexpFilters_matching', 'subscriptionClasses'):
@@ -45,7 +48,7 @@ def doRewrite():
     command.append(sourceFile)
 
   out = open(os.path.join(targetDir, 'qunit', 'tests', 'adblockplus.js'), 'wb')
-  subprocess.Popen(command, stdout=out).communicate()
+  subprocess.Popen(command, stdout=out, env=env).communicate()
 
 if __name__ == '__main__':
   doRewrite()
