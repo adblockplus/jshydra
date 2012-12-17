@@ -5,24 +5,21 @@
 # version 2.0 (the "License"). You can obtain a copy of the License at
 # http://mozilla.org/MPL/2.0/.
 
-import sys, os, subprocess, re, difflib
-from utils import ensureJSShell
+import sys, os, subprocess, re, difflib, utils
 
 def run_tests():
-  basedir = os.path.dirname(sys.argv[0])
-  if not basedir:
-    basedir = '.'
-
-  application = ensureJSShell(basedir)
+  application = utils.ensureJSShell()
   env = {
-    'LD_LIBRARY_PATH': os.path.dirname(application),
+    'LD_LIBRARY_PATH': os.path.relpath(os.path.dirname(application)),
   }
-  testdir = os.path.join(basedir, 'autotest')
-  for file in os.listdir(testdir):
+
+  baseDir = os.path.dirname(utils.__file__)
+  testDir = os.path.join(baseDir, 'autotest')
+  for file in os.listdir(testDir):
     if not re.search(r'^test_.*\.js$', file):
       continue
 
-    file = os.path.join(testdir, file)
+    file = os.path.join(testDir, file)
     handle = open(file, 'r')
     name = None
     arguments = None
@@ -37,7 +34,7 @@ def run_tests():
     if arguments == None:
       continue
 
-    command = [application, '-U', os.path.join(basedir, 'jshydra.js'), file] + arguments
+    command = [application, '-U', os.path.join(baseDir, 'jshydra.js'), file] + arguments
     out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env).communicate()[0].replace('\r', '')
     expected = open(file + '.expected', 'r').read().replace('\r', '')
     if out == expected:

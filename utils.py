@@ -7,8 +7,9 @@
 import sys, os, urllib, zipfile
 from StringIO import StringIO
 
-def ensureJSShell(basedir):
-  shell_dir = os.path.join(basedir, 'mozilla')
+def ensureJSShell():
+  baseDir = os.path.dirname(__file__)
+  shell_dir = os.path.join(baseDir, 'mozilla')
   if not os.path.exists(shell_dir):
     os.makedirs(shell_dir)
   if sys.platform == 'win32':
