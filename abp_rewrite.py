@@ -21,6 +21,7 @@ def doRewrite(files, args):
     '--arg', ' '.join(args)
   ] + files
   result, dummy = subprocess.Popen(command, stdout=subprocess.PIPE, env=env).communicate()
+  result = result.replace('\r', '')
   return result
 
 if __name__ == '__main__':
