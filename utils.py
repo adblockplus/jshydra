@@ -35,4 +35,10 @@ def ensureJSShell():
 
   if not os.path.exists(path):
     raise Exception('Downloaded package didn\'t contain JS shell executable')
+
+  try:
+    os.chmod(path, 0700)
+  except:
+    pass
+
   return path
