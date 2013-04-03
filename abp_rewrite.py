@@ -16,7 +16,7 @@ def doRewrite(files, args):
 
   baseDir = os.path.dirname(utils.__file__)
   command = [
-    application, '-U', os.path.join(baseDir, 'jshydra.js'),
+    application, os.path.join(baseDir, 'jshydra.js'),
     os.path.join(baseDir, 'scripts', 'abprewrite.js'),
     '--arg', ' '.join(args)
   ] + files

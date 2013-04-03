@@ -355,6 +355,37 @@ function modifyForInStatement(ast)
   return ast;
 }
 
+function modifyLetStatement(ast)
+{
+  if (ast.body.type == "ForStatement" && ast.body.init == null)
+  {
+    // Convert back "for" loops written as "let" statements:
+    // let (foo = 0) for (; foo < bar; ++foo)
+    // {
+    //   ...
+    // }
+    //
+    // Change into:
+    // for (let foo = 0; foo < bar; ++foo)
+    // {
+    //   ...
+    // }
+    ast.body.init = {
+      type: "VariableDeclaration",
+      declarations: [],
+      kind: "let"
+    };
+    for (let i = 0; i < ast.head.length; i++)
+    {
+      ast.head[i].type = "VariableDeclarator";
+      ast.body.init.declarations.push(ast.head[i]);
+    }
+    return modifyForStatement(ast.body);
+  }
+
+  return ast;
+}
+
 function modifyFunctionExpression(ast)
 {
   if (ast.expression)

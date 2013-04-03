@@ -47,11 +47,11 @@ else
   bas();
 if (a == b);
 
-for (var a = 0; a < b.length; a++)
+for (let a = 0; a < b.length; a++)
   foo();
 for (var a = 0; a < b.length; a++);
 
-for (var a in b)
+for (let a in b)
   foo();
 for (var a in b);
 
