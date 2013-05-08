@@ -505,6 +505,7 @@ process_js = function(ast, filename, args)
     _print(' * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.');
     _print(' */');
     _print();
+    _print('//');
     _print('// This file has been generated automatically, relevant repositories:');
     if (options.source_repo)
       _print('// * ' + options.source_repo);
