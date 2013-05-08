@@ -489,8 +489,8 @@ process_js = function(ast, filename, args)
     // Output license header and warning - do this only once, not each time a file
     // is being processed.
     _print('/*');
-    _print(' * This file is part of the Adblock Plus extension,');
-    _print(' * Copyright (C) 2006-2012 Eyeo GmbH');
+    _print(' * This file is part of Adblock Plus <http://adblockplus.org/>,');
+    _print(' * Copyright (C) 2006-2013 Eyeo GmbH');
     _print(' *');
     _print(' * Adblock Plus is free software: you can redistribute it and/or modify');
     _print(' * it under the terms of the GNU General Public License version 3 as');
@@ -505,11 +505,7 @@ process_js = function(ast, filename, args)
     _print(' * along with Adblock Plus.  If not, see <http://www.gnu.org/licenses/>.');
     _print(' */');
     _print();
-    _print('//');
-    _print('// This file has been generated automatically from Adblock Plus for Firefox');
-    _print('// source code. DO NOT MODIFY, change the original source code instead.');
-    _print('//');
-    _print('// Relevant repositories:');
+    _print('// This file has been generated automatically, relevant repositories:');
     if (options.source_repo)
       _print('// * ' + options.source_repo);
     _print('// * https://hg.adblockplus.org/jshydra/');
