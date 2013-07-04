@@ -35,7 +35,7 @@ def run_tests():
       continue
 
     command = [application, os.path.join(baseDir, 'jshydra.js'), file] + arguments
-    out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env).communicate()[0].replace('\r', '')
+    out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=env).replace('\r', '')
     expected = open(file + '.expected', 'r').read().replace('\r', '')
     if out == expected:
       print '%s passed' % name
