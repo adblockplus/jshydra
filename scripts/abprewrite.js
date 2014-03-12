@@ -490,7 +490,7 @@ process_js = function(ast, filename, args)
     // is being processed.
     _print('/*');
     _print(' * This file is part of Adblock Plus <http://adblockplus.org/>,');
-    _print(' * Copyright (C) 2006-2013 Eyeo GmbH');
+    _print(' * Copyright (C) 2006-2014 Eyeo GmbH');
     _print(' *');
     _print(' * Adblock Plus is free software: you can redistribute it and/or modify');
     _print(' * it under the terms of the GNU General Public License version 3 as');
