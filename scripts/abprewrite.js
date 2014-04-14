@@ -320,39 +320,45 @@ function modifyForInStatement(ast)
 {
   if (ast.each)
   {
-    // Convert "for each" loops:
-    // for each (var foo in fooList)
-    // {
-    //   ...
-    // }
-    //
-    // Change into:
-    // for (var _loopIndex44 = 0; _loopIndex44 < fooList.length; ++_loopIndex44)
-    // {
-    //   var foo = fooList[_loopIndex44];
-    //   ...
-    // }
-    let loopIndex = Identifier("_loopIndex" + options.varIndex++);
-
-    let block = ensureBlock(ast.body);
-    if (ast.left.type == "VariableDeclaration")
-      block.body.unshift(VariableDeclaration(ast.left.declarations[0].id, Member(ast.right, loopIndex, true)));
-    else
-      block.body.unshift(Assignment(ast.left, Member(ast.right, loopIndex, true)));
-
-    return {
-      type: "ForStatement",
-      init: VariableDeclaration(loopIndex, 0),
-      test: LogicalExpression(loopIndex, "<", Member(ast.right, "length", false)),
-      update: IncExpression(loopIndex),
-      body: block
-    };
+    print("Use for (.. of ..) instead of for each (..)!\n");
+    throw new Error("Use for (.. of ..) instead of for each (..)!");
   }
 
   // Make sure that the loop body is always wrapped in a block
   ast.body = ensureBlock(ast.body);
 
   return ast;
+}
+
+function modifyForOfStatement(ast)
+{
+  // Convert "for of" loops:
+  // for (var foo of fooList)
+  // {
+  //   ...
+  // }
+  //
+  // Change into:
+  // for (var _loopIndex44 = 0; _loopIndex44 < fooList.length; ++_loopIndex44)
+  // {
+  //   var foo = fooList[_loopIndex44];
+  //   ...
+  // }
+  let loopIndex = Identifier("_loopIndex" + options.varIndex++);
+
+  let block = ensureBlock(ast.body);
+  if (ast.left.type == "VariableDeclaration")
+    block.body.unshift(VariableDeclaration(ast.left.declarations[0].id, Member(ast.right, loopIndex, true)));
+  else
+    block.body.unshift(Assignment(ast.left, Member(ast.right, loopIndex, true)));
+
+  return {
+    type: "ForStatement",
+    init: VariableDeclaration(loopIndex, 0),
+    test: LogicalExpression(loopIndex, "<", Member(ast.right, "length", false)),
+    update: IncExpression(loopIndex),
+    body: block
+  };
 }
 
 function modifyLetStatement(ast)
@@ -475,7 +481,7 @@ function modifyYieldExpression(ast)
 
 process_js = function(ast, filename, args)
 {
-  for each (let arg in args.split(/\s+/))
+  for (let arg of args.split(/\s+/))
   {
     let match = /^(\w+)\s*=\s*(.*)/.exec(arg);
     if (match && typeof options[match[1]] == "boolean")
