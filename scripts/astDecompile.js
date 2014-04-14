@@ -134,6 +134,17 @@ function decompileForInStatement(ast) {
   return str;
 }
 
+function decompileForOfStatement(ast) {
+  let str = "for (";
+  if (ast.left.type == "VariableDeclaration")
+      str += decompileVariableDeclaration(ast.left, true);
+  else
+      str += decompileAST(ast.left);
+  str += " of " + decompileExpr(ast.right, ast) + ") ";
+  str += decompileAST(ast.body);
+  return str;
+}
+
 function decompileLetStatement(ast) {
   let str = "let (";
   str += [d ? decompileAST(d) : ' ' for each (d in ast.head)].join(', ');

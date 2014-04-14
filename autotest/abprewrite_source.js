@@ -20,19 +20,21 @@ let [a, b] = foo();
 let {x: y} = foo();
 let {k1: v1, k2: v2} = foo();
 
-for each (let v in fooList)
+
+for (let v of fooList)
   alert(v);
 
-for each (let [a, b] in fooList)
+for (let [a, b] of fooList)
 {
   a += b;
   b -= a;
 }
 
-for each (let [a, b] in fooList);
+for (let [a, b] of fooList);
 
-for each (k in fooList)
+for (k of fooList)
   alert(k);
+
 
 let a = function() 1;
 let b = {
