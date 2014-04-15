@@ -27,7 +27,7 @@ def ensureJSShell():
   if sys.platform not in platform_map:
     raise Exception('Unknown platform, is there a JS shell version for it?')
 
-  download_url = 'https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2013/01/2013-01-01-03-45-03-mozilla-esr17/jsshell-%s.zip' % platform_map[sys.platform]
+  download_url = 'https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2014/04/2014-04-14-00-05-01-mozilla-esr24/jsshell-%s.zip' % platform_map[sys.platform]
   data = StringIO(urllib.urlopen(download_url).read())
   zip = zipfile.ZipFile(data)
   zip.extractall(shell_dir)
