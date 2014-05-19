@@ -69,13 +69,20 @@ require.scopes["abprewrite_source"] = (function()
   {
     return 1;
   };
-  var b =
-  {
+  var b = {
     get foo()
     {
       return 1;
     }
   };
+
+  function foo()
+  {
+    return {
+      foo: 1,
+      bar: 2
+    };
+  }
   if (a == b)
   {
     foo();
@@ -88,22 +95,26 @@ require.scopes["abprewrite_source"] = (function()
   {
     bas();
   }
-  if (a == b){}
+  if (a == b)
+  {}
   for (var a = 0; a < b.length; a++)
   {
     foo();
   }
-  for (var a = 0; a < b.length; a++){}
+  for (var a = 0; a < b.length; a++)
+  {}
   for (var a in b)
   {
     foo();
   }
-  for (var a in b){}
+  for (var a in b)
+  {}
   while (a == b)
   {
     foo();
   }
-  while (a == b){}
+  while (a == b)
+  {}
 
   function genFunc()
   {

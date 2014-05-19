@@ -15,7 +15,7 @@ let options = {
   varIndex: 0,
   indent_size: 2,
   preserve_newlines: false,
-  brace_style: "expand-strict",
+  brace_style: "expand",
   source_repo: ""
 };
 let global = this;

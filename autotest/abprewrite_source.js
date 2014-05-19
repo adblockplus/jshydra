@@ -41,6 +41,11 @@ let b = {
   get foo() 1
 };
 
+function foo()
+{
+  return {foo: 1, bar: 2};
+}
+
 if (a == b)
   foo();
 else if (a == c)
