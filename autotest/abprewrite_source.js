@@ -36,9 +36,9 @@ for (k of fooList)
   alert(k);
 
 
-let a = function() 1;
+let a = function() { return 1; };
 let b = {
-  get foo() 1
+  get foo() { return 1; }
 };
 
 function foo()
@@ -80,3 +80,8 @@ var a = function()
     yield i;
   }
 };
+
+let x = (y) => y + 1;
+x = y => y + 1;
+x = (a, b) => this[a] + b;
+x = (a, b) => { return () => 1; }
