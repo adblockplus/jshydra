@@ -131,3 +131,22 @@ var a = function()
   }
   return _generatorResult10;
 };
+var x = function(y)
+{
+  return y + 1;
+};
+x = function(y)
+{
+  return y + 1;
+};
+x = function(a, b)
+{
+  return this[a] + b;
+}.bind(this);
+x = function(a, b)
+{
+  return function()
+  {
+    return 1;
+  };
+}.bind(this);

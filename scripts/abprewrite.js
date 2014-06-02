@@ -396,24 +396,8 @@ function modifyFunctionExpression(ast)
 {
   if (ast.expression)
   {
-    // Convert expression closures:
-    // function() foo;
-    //
-    // Change into:
-    // function()
-    // {
-    //   return foo;
-    // }
-    ast.expression = false;
-    ast.body = {
-      type: "BlockStatement",
-      body: [
-        {
-          type: "ReturnStatement",
-          argument: ast.body
-        }
-      ]
-    };
+    print("Use arrow functions instead of function expressions!\n");
+    throw new Error("Use arrow functions instead of function expressions!");
   }
 
   if (ast.generator)
@@ -457,6 +441,47 @@ function modifyFunctionExpression(ast)
 function modifyFunctionDeclaration(ast)
 {
   return modifyFunctionExpression(ast);
+}
+
+function modifyArrowExpression(ast)
+{
+  if (ast.body.type != "BlockStatement") {
+    // Convert expressions to block statements.
+    // (a) => a + 1
+    //
+    // Change into:
+    // (a) => { return a + 1; }
+    ast.body = {
+      type: "BlockStatement",
+      body: [
+        {
+          type: "ReturnStatement",
+          argument: ast.body
+        }
+      ]
+    };
+  }
+
+  // Now convert the arrow expression into a normal
+  // function expression.
+  ast.type = "FunctionExpression";
+  ast.expression = false;
+
+  // We want to avoid the .bind call if |this| isn't actually used.
+  // This is not necessarily always correct, but should be good enough.
+  var body = decompileAST(ast.body);
+  if (/((\bthis\b)|=>)/.test(body)) {
+    return {
+      type: "CallExpression",
+      callee: Member(ast, "bind"),
+      arguments: [
+        {
+          type: "ThisExpression"
+        }
+      ]
+    };
+  }
+  return ast;
 }
 
 function modifyYieldExpression(ast)

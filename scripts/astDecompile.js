@@ -249,6 +249,12 @@ function decompileFunctionExpression(ast) {
   return decompileFunctionDeclaration(ast);
 }
 
+function decompileArrowExpression(ast) {
+  let str = "(" + ast.params.map(decompileAST).join(", ") + ")";
+  str += " => " + decompileAST(ast.body);
+  return str;
+}
+
 function decompileSequenceExpression(ast) {
   return "(" + [decompileExpr(e, ast) for each (e in ast.expressions)].join(", ") + ")";
 }
