@@ -180,11 +180,6 @@ function modifyExpressionStatement(ast)
     // Cu.import(...);
     if (funcName == "Cu.import")
       return null;
-
-    // Remove timeline calls:
-    // TimeLine.foobar(...);
-    if (/^TimeLine\./.test(funcName))
-      return null;
   }
 
   if (ast.expression.type == "AssignmentExpression" && ast.expression.operator == "=" && ast.expression.left.type == "ArrayPattern")
@@ -223,11 +218,6 @@ function modifyVariableDeclaration(ast)
   if (ast.declarations.length == 1 && ast.declarations[0].type == "VariableDeclarator")
   {
     let declarator = ast.declarations[0];
-
-    // Remove timeline requires:
-    // let {Timeline} = require("timeline");
-    if (declarator.init && decompileAST(declarator.init) == 'require("timeline")')
-      return null;
 
     // Remove declarations of XPCOM shortcuts:
     // const Cc = Components.classes;

@@ -6,7 +6,6 @@ const Cl = Components.unknown;
 
 Cu.import("foo/bar.jsm");
 
-let {Timeline} = require("timeline");
 let {Utils} = require("utils");
 let {Filter, BlockingFilter} = require("filterClasses");
 
