@@ -23,7 +23,7 @@
 require.scopes["abprewrite_source"] = (function()
 {
   var exports = {};
-  const Cl = Components.unknown;
+  var Cl = Components.unknown;
   var Utils = require("utils").Utils;
   var _tempVar0 = require("filterClasses");
   var Filter = _tempVar0.Filter;
@@ -31,6 +31,7 @@ require.scopes["abprewrite_source"] = (function()
   var foo;
   var bar = 2;
   var bas;
+  var FOO = "FOO";
   var _tempVar1 = foo();
   var a = _tempVar1[0];
   var b = _tempVar1[1];

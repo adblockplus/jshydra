@@ -12,6 +12,7 @@ let {Filter, BlockingFilter} = require("filterClasses");
 let foo;
 let bar = 2;
 var bas;
+const FOO = "FOO";
 
 let [a, b] = foo();
 [a, b] = [1, 2];

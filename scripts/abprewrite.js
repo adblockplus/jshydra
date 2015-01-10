@@ -207,12 +207,14 @@ function modifyExpressionStatement(ast)
 
 function modifyVariableDeclaration(ast)
 {
-  // Convert let variables:
+  // Convert let and const variables:
   // let foo = bar;
+  // const bas = 4;
   //
   // Change into:
   // var foo = bar;
-  if (ast.kind == "let")
+  // var bas = 4;
+  if (ast.kind == "let" || ast.kind == "const")
     ast.kind = "var";
 
   if (ast.declarations.length == 1 && ast.declarations[0].type == "VariableDeclarator")
