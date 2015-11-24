@@ -4,6 +4,7 @@
 # version 2.0 (the "License"). You can obtain a copy of the License at
 # http://mozilla.org/MPL/2.0/.
 
+from contextlib import closing
 import os
 import platform
 from StringIO import StringIO
@@ -47,10 +48,9 @@ def ensureJSShell():
       sys.platform, platform.machine()
     ))
 
-  data = StringIO(urllib.urlopen(JSSHELL_URL % build).read())
-  zip = zipfile.ZipFile(data)
-  zip.extractall(shell_dir)
-  zip.close()
+  with closing(urllib.urlopen(JSSHELL_URL % build)) as response, \
+       zipfile.ZipFile(StringIO(response.read())) as zip:
+    zip.extractall(shell_dir)
 
   if not os.path.exists(path):
     raise Exception('Downloaded package didn\'t contain JS shell executable')
