@@ -1,4 +1,4 @@
-^mozilla/
+^mozilla.*/
 ^jstest/
 
 \.pyc$
