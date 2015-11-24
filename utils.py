@@ -27,17 +27,6 @@ JSSHELL_SUPPORTED_PLATFORMS = {
 
 def ensureJSShell():
   baseDir = os.path.dirname(__file__)
-  shell_dir = os.path.join(baseDir, JSSHELL_DIR)
-
-  if not os.path.exists(shell_dir):
-    os.makedirs(shell_dir)
-  if sys.platform == 'win32':
-    path = os.path.join(shell_dir, 'js.exe')
-  else:
-    path = os.path.join(shell_dir, 'js')
-
-  if os.path.exists(path):
-    return path
 
   try:
     build = JSSHELL_SUPPORTED_PLATFORMS[sys.platform]
@@ -47,6 +36,17 @@ def ensureJSShell():
     raise Exception('Platform %s (%s) not supported by JS shell' % (
       sys.platform, platform.machine()
     ))
+
+  shell_dir = os.path.join(baseDir, JSSHELL_DIR + "-" + build)
+  if not os.path.exists(shell_dir):
+    os.makedirs(shell_dir)
+  if sys.platform == 'win32':
+    path = os.path.join(shell_dir, 'js.exe')
+  else:
+    path = os.path.join(shell_dir, 'js')
+
+  if os.path.exists(path):
+    return path
 
   with closing(urllib.urlopen(JSSHELL_URL % build)) as response, \
        zipfile.ZipFile(StringIO(response.read())) as zip:
