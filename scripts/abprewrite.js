@@ -558,8 +558,8 @@ process_js = function(ast, filename, args)
     //   return exports;
     // })();
     let code = 'require.scopes["' + options.filename + '"] = (function() {\n' +
-               'var exports = {};\n' +
-               decompileAST(ast) +
+               decompileAST(ast).replace(/^("use strict";\n)?/,
+                                         "$1var exports = {};\n") +
                'return exports;\n' +
                '})();\n';
     _print(js_beautify(code, options));
