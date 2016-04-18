@@ -48,9 +48,11 @@ def ensureJSShell():
 
     if os.path.exists(path):
         return path
+    
+    with closing(urllib.urlopen(JSSHELL_URL % build)) as response:
+        data = response.read()
 
-    with closing(urllib.urlopen(JSSHELL_URL % build)) as response, \
-        zipfile.ZipFile(StringIO(response.read())) as zip:
+    with zipfile.ZipFile(StringIO(data)) as zip:
         zip.extractall(shell_dir)
 
     if not os.path.exists(path):
