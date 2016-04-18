@@ -5,26 +5,30 @@
 # version 2.0 (the "License"). You can obtain a copy of the License at
 # http://mozilla.org/MPL/2.0/.
 
-import sys, os, subprocess, utils
+import sys
+import os
+import subprocess
+import utils
+
 
 def doRewrite(files, args):
-  application = utils.ensureJSShell()
+    application = utils.ensureJSShell()
 
-  env = {
-    'LD_LIBRARY_PATH': os.path.relpath(os.path.dirname(application)),
-  }
+    env = {
+        'LD_LIBRARY_PATH': os.path.relpath(os.path.dirname(application)),
+    }
 
-  baseDir = os.path.dirname(utils.__file__)
-  command = [
-    application, os.path.join(baseDir, 'jshydra.js'),
-    os.path.join(baseDir, 'scripts', 'abprewrite.js'),
-    '--arg', ' '.join(args)
-  ] + files
-  return subprocess.check_output(command, env=env).replace('\r', '')
+    baseDir = os.path.dirname(utils.__file__)
+    command = [
+        application, os.path.join(baseDir, 'jshydra.js'),
+        os.path.join(baseDir, 'scripts', 'abprewrite.js'),
+        '--arg', ' '.join(args)
+    ] + files
+    return subprocess.check_output(command, env=env).replace('\r', '')
 
 if __name__ == '__main__':
-  try:
-    scriptArgsStart = sys.argv.index('--arg')
-  except ValueError:
-    scriptArgsStart = len(sys.argv)
-  print doRewrite(sys.argv[1:scriptArgsStart], sys.argv[scriptArgsStart + 1:])
+    try:
+        scriptArgsStart = sys.argv.index('--arg')
+    except ValueError:
+        scriptArgsStart = len(sys.argv)
+    print doRewrite(sys.argv[1:scriptArgsStart], sys.argv[scriptArgsStart + 1:])
