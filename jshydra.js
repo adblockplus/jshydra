@@ -40,4 +40,7 @@ var _print = print;
 
   for (var i = 1; i < scriptArgs.length; i++)
     process_js(Reflect.parse(read(scriptArgs[i])), scriptArgs[i], scriptArg);
+
+  if (typeof post_processing == "function")
+    post_processing();
 })(this.arguments || this.scriptArgs);

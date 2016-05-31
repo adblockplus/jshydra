@@ -12,6 +12,7 @@ let headerPrinted = false;
 let options = {
   filename: null,
   module: false,
+  autoload: "",
   varIndex: 0,
   indent_size: 2,
   preserve_newlines: false,
@@ -496,7 +497,7 @@ function modifyYieldExpression(ast)
     return null;
 }
 
-process_js = function(ast, filename, args)
+var process_js = function(ast, filename, args)
 {
   for (let arg of args.split(/\s+/))
   {
@@ -556,14 +557,33 @@ process_js = function(ast, filename, args)
     //   var exports = {};
     //   ...
     //   return exports;
-    // })();
+    // });
     let code = 'require.scopes["' + options.filename + '"] = (function() {\n' +
                decompileAST(ast).replace(/^("use strict";\n)?/,
                                          "$1var exports = {};\n") +
                'return exports;\n' +
-               '})();\n';
+               '});\n';
     _print(js_beautify(code, options));
   }
   else
     _print(js_beautify(decompileAST(ast), options));
-}
+};
+
+var post_processing = function()
+{
+  let autoloadModules = options.autoload.split(/[\s,]+/);
+  for (let module of autoloadModules)
+  {
+    if (module == "")
+      continue;
+
+    _print(decompileAST({
+      type: "ExpressionStatement",
+      expression: {
+        type: "CallExpression",
+        callee: Identifier("require"),
+        arguments: [Literal(module)]
+      }
+    }));
+  }
+};
