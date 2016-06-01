@@ -27,6 +27,10 @@ JSSHELL_SUPPORTED_PLATFORMS = {
 
 
 def ensureJSShell():
+    path = os.environ.get('SPIDERMONKEY_BINARY')
+    if path and os.path.isfile(path):
+        return path
+
     baseDir = os.path.dirname(__file__)
 
     try:
@@ -48,7 +52,7 @@ def ensureJSShell():
 
     if os.path.exists(path):
         return path
-    
+
     with closing(urllib.urlopen(JSSHELL_URL % build)) as response:
         data = response.read()
 
