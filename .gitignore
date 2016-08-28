@@ -1,3 +1,4 @@
 /mozilla*/
 /jstest/
+/.tox/
 *.pyc

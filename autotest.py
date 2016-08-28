@@ -1,26 +1,21 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 # This Source Code is subject to the terms of the Mozilla Public License
 # version 2.0 (the "License"). You can obtain a copy of the License at
 # http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
+
 import sys
 import os
-import subprocess
 import re
 import difflib
-import utils
+
+import abp_rewrite
 
 
 def run_tests():
-    application = utils.ensureJSShell()
-    env = {
-        'LD_LIBRARY_PATH': os.path.relpath(os.path.dirname(application)),
-    }
+    testDir = os.path.join(os.path.dirname(__file__), 'autotest')
+    succeed = True
 
-    baseDir = os.path.dirname(utils.__file__)
-    testDir = os.path.join(baseDir, 'autotest')
     for file in os.listdir(testDir):
         if not re.search(r'^test_.*\.js$', file):
             continue
@@ -40,16 +35,21 @@ def run_tests():
         if arguments == None:
             continue
 
-        command = [application, os.path.join(baseDir, 'jshydra.js'), file] + arguments
-        out = subprocess.check_output(command, stderr=subprocess.STDOUT, env=env).replace('\r', '')
-        expected = open(file + '.expected', 'r').read().replace('\r', '')
-        if out == expected:
-            print '%s passed' % name
+        output = abp_rewrite.rewrite_js(arguments, file)
+        expected = open(file + '.expected', 'rU').read()
+        if output == expected:
+            print(name + ' passed')
         else:
-            print '%s failed! Log:' % name
-            for line in difflib.unified_diff(expected.split('\n'), out.split('\n'), fromfile=file + '.expected', tofile=file + '.output'):
-                print line
-            print
+            succeed = False
+            print(name + ' failed! Log:')
+            for line in difflib.unified_diff(expected.splitlines(),
+                                             output.splitlines(),
+                                             fromfile=file + '.expected',
+                                             tofile=file + '.output'):
+                print(line)
+            print()
+
+    return succeed
 
 if __name__ == '__main__':
-    run_tests()
+    sys.exit(not run_tests())
