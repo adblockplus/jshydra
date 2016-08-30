@@ -7,7 +7,7 @@ function decompileAST(ast) {
 }
 
 function decompileProgram(ast) {
-  return [decompileAST(stmt) for each (stmt in ast.body)].join('\n');
+  return ast.body.map(decompileAST).join('\n');
 }
 
 /* Statements */
@@ -15,8 +15,7 @@ function decompileEmptyStatement(ast) {
   return ";"
 }
 function decompileBlockStatement(ast) {
-  return '{\n' + [decompileAST(stmt) for each (stmt in ast.body)].join('\n') +
-    '\n}\n';
+  return '{\n' + ast.body.map(decompileAST).join('\n') + '\n}\n';
 }
 
 function decompileExpressionStatement(ast) {
@@ -50,11 +49,10 @@ function decompileWithStatement(ast) {
 function decompileSwitchStatement(ast) {
   let str = "switch (" + decompileAST(ast.discriminant) + ") {\n";
   let cases = [];
-  for each (let scase in ast.cases) {
+  for (let scase of ast.cases) {
     let casestr = scase.test ? "case " + decompileAST(scase.test) : "default";
     casestr += ":\n";
-    casestr += [decompileAST(stmt) for each (stmt in scase.consequent)]
-      .join('\n');
+    casestr += scase.consequent.map(decompileAST).join('\n');
     cases.push(casestr);
   }
   str += cases.join('\n') + '\n}\n';
@@ -80,7 +78,7 @@ function decompileTryStatement(ast) {
     handlers = ast.handlers;
 
   let handler_strs = [];
-  for each (let handler in handlers) {
+  for (let handler of handlers) {
     let handler_str = "catch (" + decompileAST(handler.param);
     if (handler.guard)
       handler_str += " if " + decompileAST(handler.guard);
@@ -147,7 +145,7 @@ function decompileForOfStatement(ast) {
 
 function decompileLetStatement(ast) {
   let str = "let (";
-  str += [d ? decompileAST(d) : ' ' for each (d in ast.head)].join(', ');
+  str += ast.head.map(d => d ? decompileAST(d) : ' ').join(', ');
   str += ") " + decompileAST(ast.body);
   return str;
 }
@@ -163,14 +161,14 @@ function decompileFunctionDeclaration(ast, init, name_ast) {
   else if (name_ast)
     str += decompileAST(name_ast);
   str += "(";
-  str += [decompileAST(param) for each (param in ast.params)].join(', ');
+  str += ast.params.map(decompileAST).join(', ');
   str += ") " + decompileAST(ast.body);
   return str;
 }
 
 function decompileVariableDeclaration(ast, excludeSemi) {
   let inits = [];
-  for each (let initializer in ast.declarations) {
+  for (let initializer of ast.declarations) {
     inits.push(decompileAST(initializer));
   }
   return ast.kind + " " + inits.join(', ') + (excludeSemi ? "" : ";");
@@ -227,14 +225,14 @@ function decompileThisExpression(ast) {
 
 function decompileArrayExpression(ast) {
   if (ast.elements)
-    return "[" + [el ? decompileAST(el) : "" for each (el in ast.elements)].
+    return "[" + ast.elements.map(el => el ? decompileAST(el) : "").
       join(", ") + "]";
   return "[]";
 }
 
 function decompileObjectExpression(ast) {
   let props = [];
-  for each (let prop in ast.properties) {
+  for (let prop of ast.properties) {
     if (prop.kind == "init")
       props.push(decompileAST(prop.key) + ": " + decompileAST(prop.value));
     else if (prop.kind == "get" || prop.kind == "set")
@@ -256,7 +254,7 @@ function decompileArrowExpression(ast) {
 }
 
 function decompileSequenceExpression(ast) {
-  return "(" + [decompileExpr(e, ast) for each (e in ast.expressions)].join(", ") + ")";
+  return "(" + ast.expressions.map(e => decompileExpr(e, ast)).join(", ") + ")";
 }
 
 function decompileUnaryExpression(ast) {
@@ -298,14 +296,14 @@ function decompileConditionalExpression(ast) {
 function decompileNewExpression(ast) {
   let str = "new " + decompileAST(ast.callee, ast) + "(";
   if (ast.arguments)
-    str += [decompileAST(arg) for each (arg in ast.arguments)].join(", ");
+    str += ast.arguments.map(decompileAST).join(", ");
   str += ")";
   return str;
 }
 
 function decompileCallExpression(ast) {
   return decompileExpr(ast.callee, ast) + "(" +
-    [decompileAST(param) for each (param in ast.arguments)] + ")";
+    ast.arguments.map(decompileAST) + ")";
 }
 
 function decompileMemberExpression(ast) {
@@ -337,8 +335,8 @@ function decompileYieldExpression(ast) {
 
 function decompileComprehensionExpression(ast, paren) {
   let str = (paren ? paren.l : "[") + decompileAST(ast.body);
-  for each (let block in ast.blocks) {
-    str += (block.each ? " for each " : " for ")
+  for (let block of ast.blocks) {
+    str += (block.each ? " for each " : " for ");
     str += "(" + decompileAST(block.left) + " in ";
     str += decompileAST(block.right) + ")";
   }
@@ -367,14 +365,13 @@ function decompileLetExpression(ast) {
 
 function decompileObjectPattern(ast) {
   let str = "{";
-  str += [decompileAST(p.key) + ": " + decompileAST(p.value)
-    for each (p in ast.properties)].join(', ');
+  str += ast.properties.map(p => decompileAST(p.key) + ": " +
+                                 decompileAST(p.value)).join(', ');
   return str + "}";
 }
 
 function decompileArrayPattern(ast) {
-  return "[" +
-    [e ? decompileAST(e) : ' ' for each (e in ast.elements)].join(', ') + "]";
+  return "[" + ast.elements.map(e => e ? decompileAST(e) : ' ').join(', ') + "]";
 }
 
 function decompileIdentifier(ast) { return ast.name; }
@@ -389,11 +386,14 @@ function sanitize(str, q) {
     if (x == '\r') return '\\r';
     if (x == '\t') return '\\t';
     if (x == '\v') return '\\v';
-    let val = x.charCodeAt(0)
+    let val = x.charCodeAt(0);
     if (x < ' ') return '\\x' + (val - val % 16) / 16 + (val % 16);
     return x;
   }
-  return [replace(x) for each (x in str)].join('');
+  let result = "";
+  for (let char of str)
+    result += replace(char);
+  return result;
 }
 
 function decompileLiteral(ast) {
@@ -402,100 +402,6 @@ function decompileLiteral(ast) {
   if (ast.value === null)
       return "null";
   return ast.value;
-}
-
-/* E4X */
-function decompileXMLDefaultDeclaration(ast) {
-  return "default xml namespace = " + decompileAST(ast.namespace) + ";";
-}
-
-function decompileXMLAnyName(ast) {
-  return "*";
-}
-
-function decompileXMLQualifiedIdentifier(ast) {
-  let str = decompileAST(ast.left) + "::";
-  if (ast.computed)
-    str += "[";
-  str += decompileAST(ast.right);
-  if (ast.computed)
-    str += "]";
-  return str;
-}
-
-function decompileXMLFunctionQualifiedIdentifier(ast) {
-  let str = "function::";
-  if (ast.computed)
-    str += "[";
-  str += decompileAST(ast.right);
-  if (ast.computed)
-    str += "]";
-  return str;
-}
-
-function decompileXMLAttributeSelector(ast) {
-  return "@" + decompileAST(ast.attribute);
-}
-
-function decompileXMLFilterExpression(ast) {
-  return decompileAST(ast.left) + ".(" + decompileAST(ast.right) + ")";
-}
-
-function decompileXMLElement(ast) {
-  return [decompileAST(xml) for each (xml in ast.contents)].join('');
-}
-
-function decompileXMLList(ast) {
-  return "<>" + [decompileAST(xml) for each (xml in ast.contents)].join("") + "</>";
-}
-
-function decompileXMLEscape(ast) {
-  return "{" + decompileAST(ast.expression) + "}";
-}
-
-function decompileXMLText(ast) {
-  return ast.text;
-}
-
-function tagJoin(strings) {
-  let str = strings[0];
-  for (let i = 1; i < strings.length; i++)
-    str += (i % 2 ? ' ' : '=') + strings[i];
-  return str;
-}
-
-function decompileXMLStartTag(ast) {
-  return "<" + tagJoin([decompileAST(xml) for each (xml in ast.contents)]) + ">";
-}
-
-function decompileXMLEndTag(ast) {
-  return "</" + tagJoin([decompileAST(xml) for each (xml in ast.contents)]) + ">";
-}
-
-function decompileXMLPointTag(ast) {
-  return "<" + tagJoin([decompileAST(xml) for each (xml in ast.contents)]) + "/>";
-}
-
-function decompileXMLName(ast) {
-  if (typeof ast.contents == "string")
-    return ast.contents + " ";
-  return [decompileAST(xml) for each (xml in ast.contents)].join('');
-}
-
-function decompileXMLAttribute(ast) {
-  return '"' + ast.value + '"';
-}
-
-function decompileXMLCdata(ast) {
-  return "<![CDATA[" + ast.contents + "]]>";
-}
-
-function decompileXMLComment(ast) {
-  return "<!--" + ast.comment + "-->";
-}
-
-function decompileXMLProcessingInstruction(ast) {
-  return "<?" + ast.target + (ast.contents ? " " + ast.contents : "") + "?>";
 }
 
 function process_js(ast) {
