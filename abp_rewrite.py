@@ -17,9 +17,9 @@ except ImportError:
     def urlopen(*args, **kwargs):
         return contextlib.closing(urllib2.urlopen(*args, **kwargs))
 
-JSSHELL_DIR = 'mozilla-esr31'
+JSSHELL_DIR = 'mozilla-esr45'
 JSSHELL_URL = ('https://ftp.mozilla.org/pub/mozilla.org/firefox/nightly'
-               '/2015/02/2015-02-25-00-22-19-{}'
+               '/2016/05/2016-05-29-00-15-03-{}'
                '/jsshell-{{}}.zip'.format(JSSHELL_DIR))
 
 JSSHELL_SUPPORTED_PLATFORMS = {

@@ -19,7 +19,6 @@ let options = {
   brace_style: "expand",
   source_repo: ""
 };
-let global = this;
 
 function Literal(value)
 {
@@ -436,7 +435,7 @@ function modifyFunctionDeclaration(ast)
   return modifyFunctionExpression(ast);
 }
 
-function modifyArrowExpression(ast)
+function modifyArrowFunctionExpression(ast)
 {
   if (ast.body.type != "BlockStatement") {
     // Convert expressions to block statements.

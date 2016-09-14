@@ -247,7 +247,7 @@ function decompileFunctionExpression(ast) {
   return decompileFunctionDeclaration(ast);
 }
 
-function decompileArrowExpression(ast) {
+function decompileArrowFunctionExpression(ast) {
   let str = "(" + ast.params.map(decompileAST).join(", ") + ")";
   str += " => " + decompileAST(ast.body);
   return str;
