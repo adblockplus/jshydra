@@ -21,11 +21,12 @@
 //
 
 var Cl = Components.unknown;
+"foo + bar \n\r\x02\x0f\x1e";
 var Utils = require("utils").Utils;
 var _tempVar0 = require("filterClasses");
 var Filter = _tempVar0.Filter;
 var BlockingFilter = _tempVar0.BlockingFilter;
-var foo;
+var foovar;
 var bar = 2;
 var bas;
 var FOO = "FOO";
@@ -35,7 +36,7 @@ var b = _tempVar1[1];
 var _tempVar2 = [1, 2];
 a = _tempVar2[0];
 b = _tempVar2[1];
-var y = foo().x;
+var prop = foo().x;
 var _tempVar3 = foo();
 var v1 = _tempVar3.k1;
 var v2 = _tempVar3.k2;
@@ -47,27 +48,27 @@ for (var _loopIndex4 = 0; _loopIndex4 < fooList.length; ++_loopIndex4)
 for (var _loopIndex5 = 0; _loopIndex5 < fooList.length; ++_loopIndex5)
 {
   var _tempVar6 = fooList[_loopIndex5];
-  var a = _tempVar6[0];
-  var b = _tempVar6[1];
-  a += b;
-  b -= a;
+  var i1 = _tempVar6[0];
+  var i2 = _tempVar6[1];
+  i1 += i2;
+  i2 -= i1;
 }
 for (var _loopIndex7 = 0; _loopIndex7 < fooList.length; ++_loopIndex7)
 {
   var _tempVar8 = fooList[_loopIndex7];
-  var a = _tempVar8[0];
-  var b = _tempVar8[1];
+  var j1 = _tempVar8[0];
+  var j2 = _tempVar8[1];
 }
 for (var _loopIndex9 = 0; _loopIndex9 < fooList.length; ++_loopIndex9)
 {
   k = fooList[_loopIndex9];
   alert(k);
 }
-var a = function()
+var arrow = function()
 {
   return 1;
 };
-var b = {
+var getter = {
   get foo()
   {
     return 1;
@@ -95,17 +96,17 @@ else
 }
 if (a == b)
 {}
-for (var a = 0; a < b.length; a++)
+for (var x = 0; x < b.length; x++)
 {
   foo();
 }
-for (var a = 0; a < b.length; a++)
+for (var y = 0; y < b.length; y++)
 {}
-for (var a in b)
+for (var i in b)
 {
   foo();
 }
-for (var a in b)
+for (var j in b)
 {}
 while (a == b)
 {
@@ -123,7 +124,7 @@ function genFunc()
   }
   return _generatorResult10;
 }
-var a = function()
+var func = function()
 {
   var _generatorResult10 = [];
   for (var i = 0; i < 10; i++)

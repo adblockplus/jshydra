@@ -6,10 +6,12 @@ const Cl = Components.unknown;
 
 Cu.import("foo/bar.jsm");
 
+"foo \x2B bar \n\r\x02\x0F\x1E";
+
 let {Utils} = require("utils");
 let {Filter, BlockingFilter} = require("filterClasses");
 
-let foo;
+let foovar;
 let bar = 2;
 var bas;
 const FOO = "FOO";
@@ -17,27 +19,27 @@ const FOO = "FOO";
 let [a, b] = foo();
 [a, b] = [1, 2];
 
-let {x: y} = foo();
+let {x: prop} = foo();
 let {k1: v1, k2: v2} = foo();
 
 
 for (let v of fooList)
   alert(v);
 
-for (let [a, b] of fooList)
+for (let [i1, i2] of fooList)
 {
-  a += b;
-  b -= a;
+  i1 += i2;
+  i2 -= i1;
 }
 
-for (let [a, b] of fooList);
+for (let [j1, j2] of fooList);
 
 for (k of fooList)
   alert(k);
 
 
-let a = function() { return 1; };
-let b = {
+let arrow = () => 1;
+let getter = {
   get foo() { return 1; }
 };
 
@@ -54,26 +56,26 @@ else
   bas();
 if (a == b);
 
-for (let a = 0; a < b.length; a++)
+for (let x = 0; x < b.length; x++)
   foo();
-for (var a = 0; a < b.length; a++);
+for (var y = 0; y < b.length; y++);
 
-for (let a in b)
+for (let i in b)
   foo();
-for (var a in b);
+for (var j in b);
 
 while (a==b)
   foo();
 while (a==b);
 
-function genFunc()
+function* genFunc()
 {
   for (var i = 0; i < 10; i++)
   {
     yield i;
   }
 }
-var a = function()
+var func = function*()
 {
   for (var i = 0; i < 10; i++)
   {

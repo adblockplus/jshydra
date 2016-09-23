@@ -387,7 +387,7 @@ function sanitize(str, q) {
     if (x == '\t') return '\\t';
     if (x == '\v') return '\\v';
     let val = x.charCodeAt(0);
-    if (x < ' ') return '\\x' + (val - val % 16) / 16 + (val % 16);
+    if (x < ' ') return '\\x' + (val < 16 ? '0' : '') + val.toString(16);
     return x;
   }
   let result = "";
